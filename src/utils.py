@@ -82,15 +82,18 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
     return G, G_train, testing_pos_edges, train_graph_filename
 
+def edges_generator(L, iter):
+    for comb in itertools.combinations(L, iter):
+        yield comb
 
 def generate_neg_edges(original_graph, testing_edges_num, seed=0):
     L = list(original_graph.nodes())
     # create a complete graph
     G = nx.Graph()
     G.add_nodes_from(L)
-    G.add_edges_from(itertools.combinations(L, 2))
     # remove original edges
     G.remove_edges_from(original_graph.edges())
+    G.add_edges_from(edges_generator(L, 2))
     random.seed(seed)
     neg_edges = random.sample(G.edges, testing_edges_num)
     return neg_edges
@@ -169,3 +172,26 @@ def get_y_pred(y_test, y_pred_prob):
         for j in range(num):
             y_pred[i][sort_index[i][j]] = 1
     return y_pred
+
+def get_xy_sets(embedding_look_up, graph_edges, neg_edges):
+    x = []
+    y = []
+    for edge in graph_edges:
+        node_u_emb = embedding_look_up[edge[0]]
+        node_v_emb = embedding_look_up[edge[1]]
+        feature_vector = np.append(node_u_emb, node_v_emb)
+        x.append(feature_vector)
+        y.append(1)
+    for edge in neg_edges:
+        node_u_emb = embedding_look_up[edge[0]]
+        node_v_emb = embedding_look_up[edge[1]]
+        feature_vector = np.append(node_u_emb, node_v_emb)
+        x.append(feature_vector)
+        y.append(0)
+
+    c = list(zip(x, y))
+    random.shuffle(c)
+    x, y = zip(*c)
+    x = np.array(x)
+    y = np.array(y)
+    return x, y
