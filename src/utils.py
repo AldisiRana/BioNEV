@@ -47,7 +47,7 @@ def read_for_SVD(filename, weighted=False):
     return G
 
 
-def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, seed=0):
+def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, seed=None):
     if (weighted):
         G = nx.read_weighted_edgelist(input_edgelist)
     else:
@@ -55,7 +55,8 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
     node_num1, edge_num1 = len(G.nodes), len(G.edges)
     print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
     testing_edges_num = int(len(G.edges) * testing_ratio)
-    random.seed(seed)
+    if seed is not None:
+        random.seed(seed)
     testing_pos_edges = random.sample(G.edges, testing_edges_num)
     G_train = copy.deepcopy(G)
     for edge in testing_pos_edges:
@@ -86,21 +87,28 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
 #     for comb in itertools.combinations(L, iter):
 #         yield comb
 
-def generate_neg_edges(original_graph, testing_edges_num, seed=0):
+def generate_neg_edges(original_graph, testing_edges_num, seed=None):
     L = list(original_graph.nodes())
     # create a complete graph
     G = nx.Graph()
     G.add_nodes_from(L)
-    # remove original edges
-    G.remove_edges_from(original_graph.edges())
+    original_edges = []
     combinations = list(itertools.combinations(L, 2))
-    random.seed(seed)
+    for comb in combinations:
+        if G.has_edge(comb[0], comb[1]):
+            original_edges.append(comb)
+    for edge in original_edges:
+        comb.remove(edge)
+    if seed is not None:
+        random.seed(seed)
     random_edges = random.sample(combinations, testing_edges_num)
     G.add_edges_from(random_edges)
     # for comb in combinations:
     #     G.add_edge(comb[0],comb[1])
     #G.add_edges_from(edges_generator(L, 2))
     #random.seed(seed)
+    # remove original edges
+    #G.remove_edges_from(original_graph.edges())
     neg_edges = G.edges
     return neg_edges
 
