@@ -87,31 +87,18 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
 #     for comb in itertools.combinations(L, iter):
 #         yield comb
 
-def generate_neg_edges(original_graph, testing_edges_num, seed=None):
-    L = list(original_graph.nodes())
-    # create a complete graph
-    G = nx.Graph()
-    G.add_nodes_from(L)
-    original_edges = []
-    combinations = list(itertools.combinations(L, 2))
-    for comb in combinations:
-        if G.has_edge(comb[0], comb[1]):
-            original_edges.append(comb)
-    for edge in original_edges:
-        comb.remove(edge)
+def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
+    """Get m samples from the edges in the graph that don't exist."""
     if seed is not None:
         random.seed(seed)
-    random_edges = random.sample(combinations, testing_edges_num)
-    G.add_edges_from(random_edges)
-    # for comb in combinations:
-    #     G.add_edge(comb[0],comb[1])
-    #G.add_edges_from(edges_generator(L, 2))
-    #random.seed(seed)
-    # remove original edges
-    #G.remove_edges_from(original_graph.edges())
-    neg_edges = G.edges
-    return neg_edges
 
+    negative_edges = [
+        (source, target)
+        for source, target in itertools.combinations(graph, 2)
+        if not graph.has_edge(source, target)
+    ]
+
+    return random.sample(negative_edges, m)
 
 def load_embedding(embedding_file_name, node_list=None):
     with open(embedding_file_name) as f:
