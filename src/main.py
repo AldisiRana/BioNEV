@@ -154,8 +154,10 @@ def main(args):
             wf.write('Embedding Method: %s\n' % args.method)
             wf.write('Embedding Dimension: %s\n' % args.dimensions)
             if args.task == 'link-prediction':
-                AUC, ACC, F1 = result
-                wf.write('Performance: AUC: %.4f, ACC: %.4f, F1: %.4f\n' % (AUC, ACC, F1))
+                AUC, ACC, F1, MCC, PRC= result
+                wf.write('Performance: AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f\n' % (AUC, ACC, F1, MCC))
+                wf.write('Precision-recall curve: \n')
+                wf.write(PRC + '\n')
                 wf.write('#' * 60)
             else:
                 accuracy, micro_f1, macro_f1 = result

@@ -34,9 +34,11 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     MCC =matthews_corrcoef(y_test, y_pred)
     PRC = precision_recall_curve(y_test, y_pred_proba)
     print('#' * 10 + 'Link Prediction Performance' + '#' * 10)
-    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f, PRC: $.4f' % (AUC, ACC, F1, MCC,PRC))
+    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f' % (AUC, ACC, F1, MCC))
+    print('Precision-recall curve: ')
+    print(PRC)
     print('#' * 50)
-    return (AUC, ACC, F1)
+    return (AUC, ACC, F1, MCC, PRC)
 
 
 def NodeClassification(embedding_look_up, node_list, labels, testing_ratio=0.2, seed=0):
