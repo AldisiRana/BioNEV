@@ -5,6 +5,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import precision_recall_curve
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.linear_model import LogisticRegression
 import numpy as np
@@ -19,51 +21,6 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     G_aux.add_edges_from(train_neg_edges)
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges))
 
-    # construct X_train, y_train, X_test, y_test
-    # X_train = []
-    # y_train = []
-    # for edge in train_graph.edges():
-    #     node_u_emb = embedding_look_up[edge[0]]
-    #     node_v_emb = embedding_look_up[edge[1]]
-    #     feature_vector = np.append(node_u_emb, node_v_emb)
-    #     X_train.append(feature_vector)
-    #     y_train.append(1)
-    # for edge in train_neg_edges:
-    #     node_u_emb = embedding_look_up[edge[0]]
-    #     node_v_emb = embedding_look_up[edge[1]]
-    #     feature_vector = np.append(node_u_emb, node_v_emb)
-    #     X_train.append(feature_vector)
-    #     y_train.append(0)
-
-    # X_test = []
-    # y_test = []
-    # for edge in test_pos_edges:
-    #     node_u_emb = embedding_look_up[edge[0]]
-    #     node_v_emb = embedding_look_up[edge[1]]
-    #     feature_vector = np.append(node_u_emb, node_v_emb)
-    #     X_test.append(feature_vector)
-    #     y_test.append(1)
-    # for edge in test_neg_edges:
-    #     node_u_emb = embedding_look_up[edge[0]]
-    #     node_v_emb = embedding_look_up[edge[1]]
-    #     feature_vector = np.append(node_u_emb, node_v_emb)
-    #     X_test.append(feature_vector)
-    #     y_test.append(0)
-
-    # shuffle for training and testing
-    # c = list(zip(X_train, y_train))
-    # random.shuffle(c)
-    # X_train, y_train = zip(*c)
-    #
-    # c = list(zip(X_test, y_test))
-    # random.shuffle(c)
-    # X_test, y_test = zip(*c)
-
-    # X_train = np.array(X_train)
-    # y_train = np.array(y_train)
-    #
-    # X_test = np.array(X_test)
-    # y_test = np.array(y_test)
 
     x_train, y_train = get_xy_sets(embedding_look_up, train_graph.edges(), train_neg_edges)
     clf1 = LogisticRegression(random_state=seed)
@@ -74,8 +31,10 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     AUC = roc_auc_score(y_test, y_pred_proba)
     ACC = accuracy_score(y_test, y_pred)
     F1 = f1_score(y_test, y_pred)
+    MCC =matthews_corrcoef(y_test, y_pred)
+    PRC = precision_recall_curve(y_test, y_pred_proba)
     print('#' * 10 + 'Link Prediction Performance' + '#' * 10)
-    print('AUC: %.4f, ACC: %.4f, F1: %.4f' % (AUC, ACC, F1))
+    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f, PRC: $.4f' % (AUC, ACC, F1, MCC,PRC))
     print('#' * 50)
     return (AUC, ACC, F1)
 
