@@ -6,7 +6,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import matthews_corrcoef
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.linear_model import LogisticRegression
 import numpy as np
@@ -32,11 +32,9 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     ACC = accuracy_score(y_test, y_pred)
     F1 = f1_score(y_test, y_pred)
     MCC =matthews_corrcoef(y_test, y_pred)
-    PRC = precision_recall_curve(y_test, y_pred_proba)
+    PRC = average_precision_score(y_test, y_pred_proba)
     print('#' * 10 + 'Link Prediction Performance' + '#' * 10)
-    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f' % (AUC, ACC, F1, MCC))
-    print('Precision-recall curve: ')
-    print(PRC)
+    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f, Average precision score: %.4f' % (AUC, ACC, F1, MCC, PRC))
     print('#' * 50)
     return (AUC, ACC, F1, MCC, PRC)
 
