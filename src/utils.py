@@ -72,7 +72,7 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
     input_edgelist_df = pd.read_csv(input_edgelist)
     train_inds, test_inds = next(GroupShuffleSplit(test_size=testing_ratio, n_splits=2, random_state=7).split(input_edgelist_df,
                                                                                                     groups=
-                                                                                                    weighted_edgelist[
+                                                                                                    input_edgelist_df[
                                                                                                         'Weight']))
 
     training = input_edgelist_df.iloc[train_inds]
