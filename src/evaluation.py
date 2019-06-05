@@ -14,7 +14,7 @@ import numpy as np
 
 def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edges, seed=0):
     random.seed(seed)
-    train_neg_edges = generate_neg_edges(original_graph, len(train_graph.edges()))
+    train_neg_edges = generate_neg_edges(train_graph, len(train_graph.edges()))
 
     # create a auxiliary graph to ensure that testing negative edges will not used in training
     G_aux = copy.deepcopy(original_graph)
