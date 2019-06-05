@@ -4,6 +4,8 @@ import random
 import networkx as nx
 import itertools
 import numpy as np
+import pandas as pd
+from sklearn.model_selection import GroupShuffleSplit
 import copy
 
 
@@ -48,30 +50,55 @@ def read_for_SVD(filename, weighted=False):
 
 
 def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, seed=None):
-    if (weighted):
-        G = nx.read_weighted_edgelist(input_edgelist)
-    else:
-        G = nx.read_edgelist(input_edgelist)
-    node_num1, edge_num1 = len(G.nodes), len(G.edges)
-    print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
-    testing_edges_num = int(len(G.edges) * testing_ratio)
+    # if (weighted):
+    #     G = nx.read_weighted_edgelist(input_edgelist)
+    # else:
+    #     G = nx.read_edgelist(input_edgelist)
+    # node_num1, edge_num1 = len(G.nodes), len(G.edges)
+    # print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
+    # testing_edges_num = int(len(G.edges) * testing_ratio)
     if seed is not None:
         random.seed(seed)
-    testing_pos_edges = random.sample(G.edges, testing_edges_num)
-    G_train = copy.deepcopy(G)
-    for edge in testing_pos_edges:
-        node_u, node_v = edge
-        if (G_train.degree(node_u) > 1 and G_train.degree(node_v) > 1):
-            G_train.remove_edge(node_u, node_v)
+    # testing_pos_edges = random.sample(G.edges, testing_edges_num)
+    # G_train = copy.deepcopy(G)
+    # for edge in testing_pos_edges:
+    #     node_u, node_v = edge
+    #     if (G_train.degree(node_u) > 1 and G_train.degree(node_v) > 1):
+    #         G_train.remove_edge(node_u, node_v)
 
-    G_train.remove_nodes_from(nx.isolates(G_train))
-    node_num2, edge_num2 = len(G_train.nodes), len(G_train.edges)
-    assert node_num1 == node_num2
-    train_graph_filename = 'graph_train.edgelist'
-    if weighted:
-        nx.write_edgelist(G_train, train_graph_filename, data=['weight'])
-    else:
-        nx.write_edgelist(G_train, train_graph_filename, data=False)
+    # G_train.remove_nodes_from(nx.isolates(G_train))
+    # node_num2, edge_num2 = len(G_train.nodes), len(G_train.edges)
+    # assert node_num1 == node_num2
+    input_edgelist_df = pd.read_csv(input_edgelist)
+    train_inds, test_inds = next(GroupShuffleSplit(test_size=testing_ratio, n_splits=2, random_state=7).split(input_edgelist_df,
+                                                                                                    groups=
+                                                                                                    weighted_edgelist[
+                                                                                                        'Weight']))
+
+    training = input_edgelist_df.iloc[train_inds]
+    testing = input_edgelist_df.iloc[test_inds]
+    with open('training_edgelist.edgelist', 'w') as trainingfile:
+        for index, row in training.iterrows():
+            trainingfile.write('%d\t%d\n' % (row['Source'], row['Target']))
+
+    with open('testing_edgelist.edgelist', 'w') as testingfile:
+        for index, row in testing.iterrows():
+            testingfile.write('%d\t%d\n' % (row['Source'], row['Target']))
+
+    with open('fullgraph.edgelist', 'w') as fullgraphfile:
+        for index, row in input_edgelist_df:
+            fullgraphfile.write('%d\t%d\n' % (row['Source'], row['Target']))
+
+    G = nx.read_edgelist('fullgraph.edgelist')
+    G_train = nx.read_edgelist('training_edgelist.edgelist')
+    G_test = nx.read_edgelist('testing_edgelist.edgelist')
+    testing_pos_edges = G_test.edges
+    train_graph_filename = 'training_edgelist.edgelist'
+    # train_graph_filename = 'graph_train.edgelist'
+    # if weighted:
+    #     nx.write_edgelist(G_train, train_graph_filename, data=['weight'])
+    # else:
+    #     nx.write_edgelist(G_train, train_graph_filename, data=False)
 
     # with open(dataset_name + '_test_pos.edgelist', 'w') as wf:
     #     for edge in testing_pos_edges:
@@ -79,8 +106,9 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
     #         wf.write('%s %s\n' % (node_u, node_v))
     #     wf.close()
 
-    node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
-    print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
+    # node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
+    # print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
+
     return G, G_train, testing_pos_edges, train_graph_filename
 
 # def edges_generator(L, iter):
