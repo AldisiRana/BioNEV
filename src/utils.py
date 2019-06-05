@@ -86,7 +86,7 @@ def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, se
             testingfile.write('%d\t%d\n' % (row['Source'], row['Target']))
 
     with open('fullgraph.edgelist', 'w') as fullgraphfile:
-        for index, row in input_edgelist_df:
+        for index, row in input_edgelist_df.iterrows():
             fullgraphfile.write('%d\t%d\n' % (row['Source'], row['Target']))
 
     G = nx.read_edgelist('fullgraph.edgelist')
