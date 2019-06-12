@@ -21,7 +21,6 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     G_aux.add_edges_from(train_neg_edges)
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges))
 
-
     x_train, y_train = get_xy_sets(embedding_look_up, train_graph.edges(), train_neg_edges)
     clf1 = LogisticRegression(random_state=seed)
     clf1.fit(x_train, y_train)

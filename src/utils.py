@@ -59,7 +59,7 @@ def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weight
     node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
 
-    return G, G_train, G_test, training_edgelist
+    return G, G_train, testing_pos_edges, training_edgelist
 
 def split_train_test_graph(input_edgelist, testing_ratio=0.2, weighted=False, seed=None):
     if (weighted):
