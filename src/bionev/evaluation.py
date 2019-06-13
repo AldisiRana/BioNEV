@@ -18,66 +18,21 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     G_aux.add_edges_from(train_neg_edges)
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges), seed)
 
-    # construct X_train, y_train, X_test, y_test
-    X_train = []
-    y_train = []
-    for edge in train_graph.edges():
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        X_train.append(feature_vector)
-        y_train.append(1)
-    for edge in train_neg_edges:
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        X_train.append(feature_vector)
-        y_train.append(0)
-
-    X_test = []
-    y_test = []
-    for edge in test_pos_edges:
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        X_test.append(feature_vector)
-        y_test.append(1)
-    for edge in test_neg_edges:
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        X_test.append(feature_vector)
-        y_test.append(0)
-
-    # shuffle for training and testing
-    c = list(zip(X_train, y_train))
-    random.shuffle(c)
-    X_train, y_train = zip(*c)
-
-    c = list(zip(X_test, y_test))
-    random.shuffle(c)
-    X_test, y_test = zip(*c)
-
-    X_train = np.array(X_train)
-    y_train = np.array(y_train)
-
-    X_test = np.array(X_test)
-    y_test = np.array(y_test)
-
-    clf1 = LogisticRegression(random_state=seed, solver='lbfgs')
-    clf1.fit(X_train, y_train)
-    y_pred_proba = clf1.predict_proba(X_test)[:, 1]
-    y_pred = clf1.predict(X_test)
-    auc_roc = roc_auc_score(y_test, y_pred_proba)
-    auc_pr = average_precision_score(y_test, y_pred_proba)
-    accuracy = accuracy_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    mcc = matthews_corrcoef(y_test, y_pred)
-    print('#' * 9 + ' Link Prediction Performance ' + '#' * 9)
-    print(f'AUC-ROC: {auc_roc:.3f}, AUC-PR: {auc_pr:.3f}, Accuracy: {accuracy:.3f}, F1: {f1:.3f}, MCC: {mcc:.3f}')
+    x_train, y_train = get_xy_sets(embedding_look_up, train_graph.edges(), train_neg_edges)
+    clf1 = LogisticRegression(random_state=seed)
+    clf1.fit(x_train, y_train)
+    x_test, y_test = get_xy_sets(embedding_look_up, test_pos_edges, test_neg_edges)
+    y_pred_proba = clf1.predict_proba(x_test)[:, 1]
+    y_pred = clf1.predict(x_test)
+    AUC = roc_auc_score(y_test, y_pred_proba)
+    ACC = accuracy_score(y_test, y_pred)
+    F1 = f1_score(y_test, y_pred)
+    MCC =matthews_corrcoef(y_test, y_pred)
+    PRC = average_precision_score(y_test, y_pred_proba)
+    print('#' * 10 + 'Link Prediction Performance' + '#' * 10)
+    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f, Average precision score: %.4f' % (AUC, ACC, F1, MCC, PRC))
     print('#' * 50)
-    return auc_roc, auc_pr, accuracy, f1, mcc
-
+    return (AUC, ACC, F1, MCC, PRC)
 
 def NodeClassification(embedding_look_up, node_list, labels, testing_ratio, seed):
 

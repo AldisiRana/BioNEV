@@ -109,6 +109,8 @@ def parse_args():
                         help='gae model selection: gcn_ae or gcn_vae')
     parser.add_argument('--eval-result-file', help='save evaluation performance')
     parser.add_argument('--seed',default=0, type=int,  help='seed value')
+    parser.add_argument('--training-edgelist', default=None, help='input training edgelist')
+    parser.add_argument('--testing-edgelist', default=None, help='input testing edgelist')
     args = parser.parse_args()
 
     return args
@@ -120,7 +122,10 @@ def main(args):
     print('#' * 70)
 
     if args.task == 'link-prediction':
-        G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input, args.seed, weighted=args.weighted)
+        if args.training_edgelist and args.testing_edgelist != None:
+            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(args.input, args.training_edgelist, args.testing_edgelist, weighted=args.weighted)
+        else:
+            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input, weighted=args.weighted)
         time1 = time.time()
         embedding_training(args, train_graph_filename)
         embed_train_time = time.time() - time1

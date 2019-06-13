@@ -50,9 +50,21 @@ def read_for_SVD(filename, weighted=False):
         G = nx.read_edgelist(filename)
     return G
 
+def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weighted=False):
+    if (weighted):
+        G = nx.read_weighted_edgelist(input_edgelist)
+        G_train = nx.read_weighted_edgelist(training_edgelist)
+        G_test = nx.read_weighted_edgelist(testing_edgelist)
+    else:
+        G = nx.read_edgelist(input_edgelist)
+        G_train = nx.read_edgelist(training_edgelist)
+        G_test = nx.read_edgelist(testing_edgelist)
+    testing_pos_edges = G_test.edges
+    node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
+    print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
 
 def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=False):
-    
+
     if (weighted):
         G = nx.read_weighted_edgelist(input_edgelist)
     else:
@@ -60,7 +72,8 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
     node_num1, edge_num1 = len(G.nodes), len(G.edges)
     print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
     testing_edges_num = int(len(G.edges) * testing_ratio)
-    random.seed(seed)
+    if seed is not None:
+        random.seed(seed)
     testing_pos_edges = random.sample(G.edges, testing_edges_num)
     G_train = copy.deepcopy(G)
     for edge in testing_pos_edges:
@@ -68,9 +81,12 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
         if (G_train.degree(node_u) > 1 and G_train.degree(node_v) > 1):
             G_train.remove_edge(node_u, node_v)
 
-    G_train.remove_nodes_from(nx.isolates(G_train))
-    node_num2, edge_num2 = len(G_train.nodes), len(G_train.edges)
-    assert node_num1 == node_num2
+    # G_train.remove_nodes_from(nx.isolates(G_train))
+    # node_num2, edge_num2 = len(G_train.nodes), len(G_train.edges)
+    # assert node_num1 == node_num2
+
+    #train_graph_filename = 'training_edgelist.edgelist'
+    #print('number of training nodes: %d' % len(G_train.nodes()))
     train_graph_filename = 'graph_train.edgelist'
     if weighted:
         nx.write_edgelist(G_train, train_graph_filename, data=['weight'])
@@ -85,22 +101,25 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
 
     node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
+
     return G, G_train, testing_pos_edges, train_graph_filename
 
+# def edges_generator(L, iter):
+#     for comb in itertools.combinations(L, iter):
+#         yield comb
 
-def generate_neg_edges(original_graph, testing_edges_num, seed):
-    L = list(original_graph.nodes())
+def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
+    """Get m samples from the edges in the graph that don't exist."""
+    if seed is not None:
+        random.seed(seed)
 
-    # create a complete graph
-    G = nx.Graph()
-    G.add_nodes_from(L)
-    G.add_edges_from(itertools.combinations(L, 2))
-    # remove original edges
-    G.remove_edges_from(original_graph.edges())
-    random.seed(seed)
-    neg_edges = random.sample(G.edges, testing_edges_num)
-    return neg_edges
+    negative_edges = [
+        (source, target)
+        for source, target in itertools.combinations(graph, 2)
+        if not graph.has_edge(source, target)
+    ]
 
+    return random.sample(negative_edges, m)
 
 def load_embedding(embedding_file_name, node_list=None):
     with open(embedding_file_name) as f:
@@ -116,7 +135,7 @@ def load_embedding(embedding_file_name, node_list=None):
                     emb = emb / np.linalg.norm(emb)
                     emb[np.isnan(emb)] = 0
                     embedding_look_up[node_id] = list(emb)
-	    
+
             assert len(node_list) == len(embedding_look_up)
         else:
             for line in f:
@@ -127,7 +146,7 @@ def load_embedding(embedding_file_name, node_list=None):
                 emb = emb / np.linalg.norm(emb)
                 emb[np.isnan(emb)] = 0
                 embedding_look_up[node_id] = list(emb)
-	    
+
             assert int(node_num) == len(embedding_look_up)
         f.close()
         return embedding_look_up
@@ -177,3 +196,26 @@ def get_y_pred(y_test, y_pred_prob):
         for j in range(num):
             y_pred[i][sort_index[i][j]] = 1
     return y_pred
+
+def get_xy_sets(embedding_look_up, graph_edges, neg_edges):
+    x = []
+    y = []
+    for edge in graph_edges:
+        node_u_emb = embedding_look_up[edge[0]]
+        node_v_emb = embedding_look_up[edge[1]]
+        feature_vector = np.append(node_u_emb, node_v_emb)
+        x.append(feature_vector)
+        y.append(1)
+    for edge in neg_edges:
+        node_u_emb = embedding_look_up[edge[0]]
+        node_v_emb = embedding_look_up[edge[1]]
+        feature_vector = np.append(node_u_emb, node_v_emb)
+        x.append(feature_vector)
+        y.append(0)
+
+    c = list(zip(x, y))
+    random.shuffle(c)
+    x, y = zip(*c)
+    x = np.array(x)
+    y = np.array(y)
+    return x, y
