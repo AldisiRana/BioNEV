@@ -10,7 +10,8 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import numpy as np
 
-from bionev.embed_train import embedding_training, load_embedding, read_node_labels, split_train_test_graph
+from bionev.embed_train import embedding_training
+from bionev.utils import split_train_test_graph, train_test_graph, load_embedding, read_node_labels
 from bionev.evaluation import LinkPrediction, NodeClassification
 
 
@@ -122,10 +123,10 @@ def main(args):
     print('#' * 70)
 
     if args.task == 'link-prediction':
-        if args.training_edgelist and args.testing_edgelist != None:
+        if None not in (args.training_edgelist, args.testing_edgelist):
             G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(args.input, args.training_edgelist, args.testing_edgelist, weighted=args.weighted)
         else:
-            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input, weighted=args.weighted)
+            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input, weighted=args.weighted, seed=args.seed)
         time1 = time.time()
         embedding_training(args, train_graph_filename)
         embed_train_time = time.time() - time1
@@ -136,7 +137,8 @@ def main(args):
         result = LinkPrediction(embedding_look_up, G, G_train, testing_pos_edges,args.seed)
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
-        os.remove(train_graph_filename)
+        if None in (args.training_edgelist, args.testing_edgelist):
+            os.remove(train_graph_filename)
     elif args.task == 'node-classification':
         if not args.label_file:
             raise ValueError("No input label file. Exit.")
