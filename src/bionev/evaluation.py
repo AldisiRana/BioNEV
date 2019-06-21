@@ -24,15 +24,15 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     x_test, y_test = get_xy_sets(embedding_look_up, test_pos_edges, test_neg_edges)
     y_pred_proba = clf1.predict_proba(x_test)[:, 1]
     y_pred = clf1.predict(x_test)
-    AUC = roc_auc_score(y_test, y_pred_proba)
-    ACC = accuracy_score(y_test, y_pred)
-    F1 = f1_score(y_test, y_pred)
-    MCC =matthews_corrcoef(y_test, y_pred)
-    PRC = average_precision_score(y_test, y_pred_proba)
-    print('#' * 10 + 'Link Prediction Performance' + '#' * 10)
-    print('AUC: %.4f, ACC: %.4f, F1: %.4f, MCC: %.4f, Average precision score: %.4f' % (AUC, ACC, F1, MCC, PRC))
+    auc_roc = roc_auc_score(y_test, y_pred_proba)
+    auc_pr = average_precision_score(y_test, y_pred_proba)
+    accuracy = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    mcc = matthews_corrcoef(y_test, y_pred)
+    print('#' * 9 + ' Link Prediction Performance ' + '#' * 9)
+    print(f'AUC-ROC: {auc_roc:.3f}, AUC-PR: {auc_pr:.3f}, Accuracy: {accuracy:.3f}, F1: {f1:.3f}, MCC: {mcc:.3f}')
     print('#' * 50)
-    return (AUC, ACC, F1, MCC, PRC)
+return auc_roc, auc_pr, accuracy, f1, mcc
 
 def NodeClassification(embedding_look_up, node_list, labels, testing_ratio, seed):
 
