@@ -32,7 +32,7 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     print('#' * 9 + ' Link Prediction Performance ' + '#' * 9)
     print(f'AUC-ROC: {auc_roc:.3f}, AUC-PR: {auc_pr:.3f}, Accuracy: {accuracy:.3f}, F1: {f1:.3f}, MCC: {mcc:.3f}')
     print('#' * 50)
-return auc_roc, auc_pr, accuracy, f1, mcc
+    return auc_roc, auc_pr, accuracy, f1, mcc
 
 def NodeClassification(embedding_look_up, node_list, labels, testing_ratio, seed):
 
