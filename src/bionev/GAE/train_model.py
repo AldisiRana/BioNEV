@@ -15,16 +15,15 @@ from bionev.GAE.preprocessing import construct_feed_dict, preprocess_graph, spar
 # os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
 
-class gae_model(object):
-    def __init__(self, args):
-        super(gae_model, self).__init__()
-        self.learning_rate = args.lr
-        self.epochs = args.epochs
-        self.hidden1 = args.hidden
-        self.hidden2 = args.dimensions
-        self.weight_decay = args.weight_decay
-        self.dropout = args.dropout
-        self.model_selection = args.gae_model_selection
+class gae_model:
+    def __init__(self, lr, epochs, hidden, dimensions, weight_decay, dropout, gae_model_selection):
+        self.learning_rate = lr
+        self.epochs = epochs
+        self.hidden1 = hidden
+        self.hidden2 = dimensions
+        self.weight_decay = weight_decay
+        self.dropout = dropout
+        self.model_selection = gae_model_selection
         self.model = None
 
     def save_embeddings(self, output):

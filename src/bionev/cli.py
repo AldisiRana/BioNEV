@@ -11,8 +11,8 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 import numpy as np
 
 from bionev.embed_train import embedding_training
-from bionev.utils import split_train_test_graph, train_test_graph, load_embedding, read_node_labels
-from bionev.evaluation import LinkPrediction, NodeClassification
+from bionev.pipeline import do_link_prediction, do_node_classification
+from bionev.utils import split_train_test_graph, train_test_graph, read_node_labels
 
 
 def parse_args():
@@ -124,40 +124,143 @@ def main(args):
 
     if args.task == 'link-prediction':
         if None not in (args.training_edgelist, args.testing_edgelist):
-            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(args.input, args.training_edgelist, args.testing_edgelist, weighted=args.weighted)
+            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(args.input,
+                                                                                   args.training_edgelist,
+                                                                                   args.testing_edgelist,
+                                                                                   weighted=args.weighted)
         else:
-            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input, weighted=args.weighted, seed=args.seed)
+            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input,
+                                                                                         weighted=args.weighted,
+                                                                                         seed=args.seed,
+                                                                                         testing_ratio=args.testingratio)
         time1 = time.time()
-        embedding_training(args, train_graph_filename)
+        embeddings = embedding_training(
+            method = args.method,
+            train_graph_filename=train_graph_filename,
+            OPT1=args.OPT1,
+            OPT2=args.OPT2,
+            OPT3=args.OPT3,
+            until_layer=args.until_layer,
+            workers=args.workers,
+            number_walks=args.number_walks,
+            walk_length=args.walk_length,
+            dimensions=args.dimensions,
+            window_size=args.window_size,
+            seed=args.seed,
+            learning_rate=args.lr,
+            epochs=args.epochs,
+            hidden=args.hidden,
+            weight_decay=args.weight_decay,
+            dropout=args.dropout,
+            gae_model_selection=args.gae_model_selection,
+            kstep=args.kstep,
+            weighted=args.weighted,
+            p=args.p,
+            q=args.q,
+            order=args.order,
+            encoder_list=args.encoder_list,
+            alpha=args.alpha,
+            beta=args.beta,
+            nu1=args.nu1,
+            nu2=args.nu2,
+            batch_size=args.batch_size)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        embedding_look_up = load_embedding(args.output)
+        embeddings.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = LinkPrediction(embedding_look_up, G, G_train, testing_pos_edges,args.seed)
+        result = do_link_prediction(embeddings=embeddings,
+                                    original_graph=G,
+                                    train_graph=G_train,
+                                    test_pos_edges=testing_pos_edges,
+                                    seed=args.seed)
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
         if None in (args.training_edgelist, args.testing_edgelist):
             os.remove(train_graph_filename)
+
     elif args.task == 'node-classification':
         if not args.label_file:
             raise ValueError("No input label file. Exit.")
         node_list, labels = read_node_labels(args.label_file)
         train_graph_filename = args.input
         time1 = time.time()
-        embedding_training(args, train_graph_filename)
+        embeddings = embedding_training(
+            method=args.method,
+            train_graph_filename=train_graph_filename,
+            OPT1=args.OPT1,
+            OPT2=args.OPT2,
+            OPT3=args.OPT3,
+            until_layer=args.until_layer,
+            workers=args.workers,
+            number_walks=args.number_walks,
+            walk_length=args.walk_length,
+            dimensions=args.dimensions,
+            window_size=args.window_size,
+            seed=args.seed,
+            learning_rate=args.learning_rate,
+            epochs=args.epochs,
+            hidden=args.hidden,
+            weight_decay=args.weight_decay,
+            dropout=args.dropout,
+            gae_model_selection=args.gae_model_selection,
+            kstep=args.kstep,
+            weighted=args.weighted,
+            p=args.p,
+            q=args.q,
+            order=args.order,
+            encoder_list=args.encoder_list,
+            alpha=args.alpha,
+            beta=args.beta,
+            nu1=args.nu1,
+            nu2=args.nu2,
+            batch_size=args.batch_size)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        embedding_look_up = load_embedding(args.output, node_list)
+        embeddings.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = NodeClassification(embedding_look_up, node_list, labels, args.testingratio, args.seed)
+        result = do_node_classification(embeddings=embeddings,
+                                        node_list=node_list,
+                                        labels=labels,
+                                        testing_ratio=args.testingratio,
+                                        seed=args.seed)
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
     else:
         train_graph_filename = args.input
         time1 = time.time()
-        embedding_training(args, train_graph_filename)
+        embeddings = embedding_training(
+            method=args.method,
+            train_graph_filename=train_graph_filename,
+            OPT1=args.OPT1,
+            OPT2=args.OPT2,
+            OPT3=args.OPT3,
+            until_layer=args.until_layer,
+            workers=args.workers,
+            number_walks=args.number_walks,
+            walk_length=args.walk_length,
+            dimensions=args.dimensions,
+            window_size=args.window_size,
+            seed=args.seed,
+            learning_rate=args.learning_rate,
+            epochs=args.epochs,
+            hidden=args.hidden,
+            weight_decay=args.weight_decay,
+            dropout=args.dropout,
+            gae_model_selection=args.gae_model_selection,
+            kstep=args.kstep,
+            weighted=args.weighted,
+            p=args.p,
+            q=args.q,
+            order=args.order,
+            encoder_list=args.encoder_list,
+            alpha=args.alpha,
+            beta=args.beta,
+            nu1=args.nu1,
+            nu2=args.nu2,
+            batch_size=args.batch_size)
+        embeddings.save_embeddings(args.output)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
 

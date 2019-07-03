@@ -1,27 +1,31 @@
-# -*- coding: utf-8 -*-
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.externals import joblib
 
 from bionev.utils import *
 
 
-def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edges, seed):
+def do_link_prediction(
+        *,
+        embeddings,
+        original_graph,
+        train_graph,
+        test_pos_edges,
+        seed,
+):
     random.seed(seed)
-
     train_neg_edges = generate_neg_edges(original_graph, len(train_graph.edges()), seed)
-
     # create a auxiliary graph to ensure that testing negative edges will not used in training
     G_aux = copy.deepcopy(original_graph)
     G_aux.add_edges_from(train_neg_edges)
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges), seed)
 
-    x_train, y_train = get_xy_sets(embedding_look_up, train_graph.edges(), train_neg_edges)
+    x_train, y_train = get_xy_sets(embeddings, train_graph.edges(), train_neg_edges)
     clf1 = LogisticRegression(random_state=seed)
     clf1.fit(x_train, y_train)
-    x_test, y_test = get_xy_sets(embedding_look_up, test_pos_edges, test_neg_edges)
+    x_test, y_test = get_xy_sets(embeddings, test_pos_edges, test_neg_edges)
     y_pred_proba = clf1.predict_proba(x_test)[:, 1]
     y_pred = clf1.predict(x_test)
     auc_roc = roc_auc_score(y_test, y_pred_proba)
@@ -29,14 +33,21 @@ def LinkPrediction(embedding_look_up, original_graph, train_graph, test_pos_edge
     accuracy = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
+    joblib.dump(clf1, 'saved_model.pkl')
     print('#' * 9 + ' Link Prediction Performance ' + '#' * 9)
     print(f'AUC-ROC: {auc_roc:.3f}, AUC-PR: {auc_pr:.3f}, Accuracy: {accuracy:.3f}, F1: {f1:.3f}, MCC: {mcc:.3f}')
     print('#' * 50)
-return auc_roc, auc_pr, accuracy, f1, mcc
+    return auc_roc, auc_pr, accuracy, f1, mcc
 
-def NodeClassification(embedding_look_up, node_list, labels, testing_ratio, seed):
-
-    X_train, y_train, X_test, y_test = split_train_test_classify(embedding_look_up, node_list, labels,
+def do_node_classification(
+        *,
+        embeddings,
+        node_list,
+        labels,
+        testing_ratio,
+        seed
+        ):
+    X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
     binarizer = MultiLabelBinarizer(sparse_output=True)
     y_all = np.append(y_train, y_test)
@@ -54,6 +65,7 @@ def NodeClassification(embedding_look_up, node_list, labels, testing_ratio, seed
     mcc = matthews_corrcoef(y_test, y_pred)
     micro_f1 = f1_score(y_test, y_pred, average="micro")
     macro_f1 = f1_score(y_test, y_pred, average="macro")
+    joblib.dump(model, 'saved_model.pkl')
 
     print('#' * 9 + ' Node Classification Performance ' + '#' * 9)
     print(f'Accuracy: {accuracy:.3f}, MCC: {mcc:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}')

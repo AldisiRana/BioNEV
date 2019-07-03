@@ -82,32 +82,17 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
         if (G_train.degree(node_u) > 1 and G_train.degree(node_v) > 1):
             G_train.remove_edge(node_u, node_v)
 
-    # G_train.remove_nodes_from(nx.isolates(G_train))
-    # node_num2, edge_num2 = len(G_train.nodes), len(G_train.edges)
-    # assert node_num1 == node_num2
-
-    #train_graph_filename = 'training_edgelist.edgelist'
-    #print('number of training nodes: %d' % len(G_train.nodes()))
     train_graph_filename = 'graph_train.edgelist'
     if weighted:
         nx.write_edgelist(G_train, train_graph_filename, data=['weight'])
     else:
         nx.write_edgelist(G_train, train_graph_filename, data=False)
 
-    # with open(dataset_name + '_test_pos.edgelist', 'w') as wf:
-    #     for edge in testing_pos_edges:
-    #         node_u, node_v = edge
-    #         wf.write('%s %s\n' % (node_u, node_v))
-    #     wf.close()
-
     node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
 
     return G, G_train, testing_pos_edges, train_graph_filename
 
-# def edges_generator(L, iter):
-#     for comb in itertools.combinations(L, iter):
-#         yield comb
 
 def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
     """Get m samples from the edges in the graph that don't exist."""
@@ -198,18 +183,18 @@ def get_y_pred(y_test, y_pred_prob):
             y_pred[i][sort_index[i][j]] = 1
     return y_pred
 
-def get_xy_sets(embedding_look_up, graph_edges, neg_edges):
+def get_xy_sets(embeddings, graph_edges, neg_edges):
     x = []
     y = []
     for edge in graph_edges:
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
+        node_u_emb = embeddings[edge[0]]
+        node_v_emb = embeddings[edge[1]]
         feature_vector = np.append(node_u_emb, node_v_emb)
         x.append(feature_vector)
         y.append(1)
     for edge in neg_edges:
-        node_u_emb = embedding_look_up[edge[0]]
-        node_v_emb = embedding_look_up[edge[1]]
+        node_u_emb = embeddings[edge[0]]
+        node_v_emb = embeddings[edge[1]]
         feature_vector = np.append(node_u_emb, node_v_emb)
         x.append(feature_vector)
         y.append(0)
