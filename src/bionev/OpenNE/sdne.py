@@ -147,6 +147,9 @@ class SDNE(object):
 
         return self.sess.run(_embeddings, feed_dict={AdjBatch: adj_mat})
 
+    def get_embeddings(self):
+        return self.vectors
+
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors)
@@ -297,6 +300,9 @@ class SDNE2(object):
                 print("step %i: %s" % (step, self.sess.run([L, L_1st, L_2nd], feed_dict=feed_dict)))
 
         return self.sess.run(emb, feed_dict={NodeA: self.adj_mat[0:1, :], NodeB: self.adj_mat[1:, :]})
+
+    def get_embeddings(self):
+        return self.vectors
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')

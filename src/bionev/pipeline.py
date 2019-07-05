@@ -4,6 +4,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.externals import joblib
 
+from bionev.embed_train import *
 from bionev.utils import *
 
 
@@ -16,7 +17,7 @@ def do_link_prediction(
         seed,
 ):
     random.seed(seed)
-    train_neg_edges = generate_neg_edges(original_graph, len(train_graph.edges()), seed)
+    train_neg_edges = generate_neg_edges(original_graph, len(train_graph.edges()), seed=0)
     # create a auxiliary graph to ensure that testing negative edges will not used in training
     G_aux = copy.deepcopy(original_graph)
     G_aux.add_edges_from(train_neg_edges)
@@ -44,8 +45,8 @@ def do_node_classification(
         embeddings,
         node_list,
         labels,
-        testing_ratio,
-        seed
+        testing_ratio=0.2,
+        seed=0
         ):
     X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)

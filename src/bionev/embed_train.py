@@ -151,16 +151,16 @@ def embedding_training(
 def train_embed_struct2vec(
         *,
         train_graph_filename,
-        OPT1,
-        OPT2,
-        OPT3,
-        until_layer,
-        workers,
-        number_walks,
-        walk_length,
-        dimensions,
-        window_size,
-        seed
+        OPT1=True,
+        OPT2=True,
+        OPT3=True,
+        until_layer=6,
+        workers=8,
+        number_walks=32,
+        walk_length=64,
+        dimensions=100,
+        window_size=10,
+        seed=0
 ):
     G_ = read_for_struc2vec(train_graph_filename)
     logging.basicConfig(filename='./src/struc2vec/struc2vec.log', filemode='w', level=logging.DEBUG,
@@ -198,13 +198,13 @@ def train_embed_struct2vec(
 
 def train_embed_gae(
         *,
-        learning_rate,
-        epochs,
-        hidden,
-        dimensions,
-        weight_decay,
-        dropout,
-        gae_model_selection,
+        learning_rate=0.01,
+        epochs=5,
+        hidden=32,
+        dimensions=100,
+        weight_decay=5e-4,
+        dropout=0,
+        gae_model_selection='gcn_ae',
         train_graph_filename
 ):
     G_ = read_for_gae(train_graph_filename)
@@ -217,9 +217,9 @@ def train_embed_gae(
 
 def train_embed_svd(
         *,
-        weighted,
+        weighted=False,
         train_graph_filename,
-        dimensions
+        dimensions=100
 ):
     G_ = read_for_SVD(train_graph_filename, weighted=weighted)
     model = SVD_embedding(G_, size=dimensions)
@@ -228,8 +228,8 @@ def train_embed_svd(
 def train_embed_laplacian(
         *,
         train_graph_filename,
-        dimensions,
-        weighted
+        dimensions=100,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = lap.LaplacianEigenmaps(G_, rep_size=dimensions)
@@ -238,11 +238,11 @@ def train_embed_laplacian(
 def train_embed_gf(
         *,
         train_graph_filename,
-        dimensions,
-        epochs,
-        learning_rate,
-        weight_decay,
-        weighted
+        dimensions=100,
+        epochs=5,
+        learning_rate=0.01,
+        weight_decay=5e-4,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = gf.GraphFactorization(
@@ -256,8 +256,8 @@ def train_embed_gf(
 def train_embed_hope(
         *,
         train_graph_filename,
-        dimensions,
-        weighted
+        dimensions=100,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = hope.HOPE(graph=G_, d=dimensions)
@@ -266,9 +266,9 @@ def train_embed_hope(
 def train_embed_grarep(
         *,
         train_graph_filename,
-        kstep,
-        dimensions,
-        weighted
+        kstep=4,
+        dimensions=100,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = grarep.GraRep(graph=G_, Kstep=kstep, dim=dimensions)
@@ -277,12 +277,12 @@ def train_embed_grarep(
 def train_embed_deepwalk(
         *,
         train_graph_filename,
-        walk_length,
-        number_walks,
-        dimensions,
-        workers,
-        window_size,
-        weighted
+        walk_length=64,
+        number_walks=32,
+        dimensions=100,
+        workers=8,
+        window_size=10,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = node2vec.Node2vec(
@@ -298,14 +298,14 @@ def train_embed_deepwalk(
 def train_embed_node2vec(
         *,
         train_graph_filename,
-        walk_length,
-        number_walks,
-        dimensions,
-        workers,
-        p,
-        q,
-        window_size,
-        weighted
+        walk_length=64,
+        number_walks=32,
+        dimensions=100,
+        workers=8,
+        p=1.0,
+        q=1.0,
+        window_size=10,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = node2vec.Node2vec(
@@ -322,10 +322,10 @@ def train_embed_node2vec(
 def train_embed_line(
         *,
         train_graph_filename,
-        epochs,
-        dimensions,
-        order,
-        weighted
+        epochs=5,
+        dimensions=100,
+        order=2,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     model = line.LINE(
@@ -338,15 +338,15 @@ def train_embed_line(
 def train_embed_sdne(
         *,
         train_graph_filename,
-        encoder_list,
-        alpha,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
-        weighted
+        encoder_list='[1000,128]',
+        alpha=0.3,
+        beta=0,
+        nu1=1e-5,
+        nu2=1e-4,
+        batch_size=200,
+        epochs=5,
+        learning_rate=0.01,
+        weighted=False
 ):
     G_ = read_for_OpenNE(train_graph_filename, weighted=weighted)
     encoder_layer_list = ast.literal_eval(encoder_list)

@@ -38,6 +38,9 @@ class Node2vec(object):
             self.vectors[word] = word2vec.wv[word]
         del word2vec
 
+    def get_embeddings(self):
+        return self.vectors
+
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors.keys())
