@@ -49,6 +49,9 @@ class HOPE(object):
             vectors[look_back[i]] = embedding
         return vectors
 
+    def get_embeddings(self):
+        return self.vectors
+
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors.keys())

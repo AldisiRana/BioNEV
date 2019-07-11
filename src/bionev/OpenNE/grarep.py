@@ -50,6 +50,9 @@ class GraRep(object):
         # Sd = S[0:self.dim]
         # return np.array(Ud)*np.power(Sd, alpha).reshape((self.dim))
 
+    def get_embeddings(self):
+        return self.vectors
+
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors.keys())

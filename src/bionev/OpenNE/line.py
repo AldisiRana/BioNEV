@@ -266,6 +266,7 @@ class LINE(object):
                 self.vectors[node] = np.append(vectors1[node], vectors2[node])
         else:
             self.vectors = self.model.get_embeddings()
+        return self.vectors
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
