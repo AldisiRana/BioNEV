@@ -40,6 +40,18 @@ def do_link_prediction(
     print('#' * 50)
     return auc_roc, auc_pr, accuracy, f1, mcc
 
+def create_link_prediction_model(
+        *,
+        embeddings,
+        original_graph,
+        seed
+):
+    train_neg_edges = generate_neg_edges(original_graph, len(original_graph.edges()), seed=0)
+    x_train, y_train = get_xy_sets(embeddings, original_graph.edges(), train_neg_edges)
+    clf1 = LogisticRegression(random_state=seed)
+    clf1.fit(x_train, y_train)
+    joblib.dump(clf1, 'prediction_model.pkl')
+
 def do_node_classification(
         *,
         embeddings,

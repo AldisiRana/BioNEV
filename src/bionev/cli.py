@@ -9,9 +9,10 @@ import time
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import numpy as np
+import networkx as nx
 
 from bionev.embed_train import embedding_training
-from bionev.pipeline import do_link_prediction, do_node_classification
+from bionev.pipeline import do_link_prediction, do_node_classification, create_link_prediction_model
 from bionev.utils import split_train_test_graph, train_test_graph, read_node_labels
 
 
@@ -261,6 +262,8 @@ def main(args):
             nu2=args.nu2,
             batch_size=args.batch_size)
         embeddings.save_embeddings(args.output)
+        original_graph = nx.read_edgelist(args.input)
+        create_link_prediction_model(embeddings=embeddings.get_embeddings(), original_graph=original_graph, seed=args.seed)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
 
