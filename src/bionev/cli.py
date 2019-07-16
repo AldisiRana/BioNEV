@@ -164,7 +164,7 @@ def main(args):
             beta=args.beta,
             nu1=args.nu1,
             nu2=args.nu2,
-            batch_size=args.batch_size)
+            batch_size=args.bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
         embeddings.save_embeddings(args.output)
@@ -215,7 +215,7 @@ def main(args):
             beta=args.beta,
             nu1=args.nu1,
             nu2=args.nu2,
-            batch_size=args.batch_size)
+            batch_size=args.bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
         embeddings.save_embeddings(args.output)
@@ -260,7 +260,7 @@ def main(args):
             beta=args.beta,
             nu1=args.nu1,
             nu2=args.nu2,
-            batch_size=args.batch_size)
+            batch_size=args.bs)
         embeddings.save_embeddings(args.output)
         original_graph = nx.read_edgelist(args.input)
         create_link_prediction_model(embeddings=embeddings.get_embeddings(), original_graph=original_graph, seed=args.seed)
