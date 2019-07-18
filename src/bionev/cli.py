@@ -135,7 +135,7 @@ def main(args):
                                                                                          seed=args.seed,
                                                                                          testing_ratio=args.testingratio)
         time1 = time.time()
-        embeddings = embedding_training(
+        model = embedding_training(
             method = args.method,
             train_graph_filename=train_graph_filename,
             OPT1=args.OPT1,
@@ -167,10 +167,10 @@ def main(args):
             batch_size=args.bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        embeddings.save_embeddings(args.output)
+        model.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = do_link_prediction(embeddings=embeddings,
+        result = do_link_prediction(embeddings=model.get_embeddings(),
                                     original_graph=G,
                                     train_graph=G_train,
                                     test_pos_edges=testing_pos_edges,
@@ -186,7 +186,7 @@ def main(args):
         node_list, labels = read_node_labels(args.label_file)
         train_graph_filename = args.input
         time1 = time.time()
-        embeddings = embedding_training(
+        model = embedding_training(
             method=args.method,
             train_graph_filename=train_graph_filename,
             OPT1=args.OPT1,
@@ -218,10 +218,10 @@ def main(args):
             batch_size=args.bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        embeddings.save_embeddings(args.output)
+        model.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = do_node_classification(embeddings=embeddings,
+        result = do_node_classification(embeddings=model.get_embeddings(),
                                         node_list=node_list,
                                         labels=labels,
                                         testing_ratio=args.testingratio,
