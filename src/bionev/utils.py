@@ -187,16 +187,16 @@ def get_xy_sets(embeddings, graph_edges, neg_edges):
     x = []
     y = []
     for edge in graph_edges:
-        node_u_emb = embeddings[edge[0]]
-        node_v_emb = embeddings[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        x.append(feature_vector)
+        node_u_emb = np.array(embeddings[edge[0]])
+        node_v_emb = np.array(embeddings[edge[1]])
+        feature_vector = node_u_emb * node_v_emb
+        x.append(feature_vector.tolist())
         y.append(1)
     for edge in neg_edges:
-        node_u_emb = embeddings[edge[0]]
-        node_v_emb = embeddings[edge[1]]
-        feature_vector = np.append(node_u_emb, node_v_emb)
-        x.append(feature_vector)
+        node_u_emb = np.array(embeddings[edge[0]])
+        node_v_emb = np.array(embeddings[edge[1]])
+        feature_vector = node_u_emb * node_v_emb
+        x.append(feature_vector.tolist())
         y.append(0)
 
     c = list(zip(x, y))
