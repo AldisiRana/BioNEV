@@ -118,8 +118,6 @@ def load_embedding(embedding_file_name, node_list=None):
                 node_id = vec[0]
                 if (node_id in node_list):
                     emb = [float(x) for x in vec[1:]]
-                    emb = emb / np.linalg.norm(emb)
-                    emb[np.isnan(emb)] = 0
                     embedding_look_up[node_id] = list(emb)
 
             assert len(node_list) == len(embedding_look_up)
@@ -127,10 +125,7 @@ def load_embedding(embedding_file_name, node_list=None):
             for line in f:
                 vec = line.strip().split()
                 node_id = vec[0]
-                embeddings = vec[1:]
-                emb = [float(x) for x in embeddings]
-                emb = emb / np.linalg.norm(emb)
-                emb[np.isnan(emb)] = 0
+                emb = [float(x) for x in vec[1:]]
                 embedding_look_up[node_id] = list(emb)
 
             assert int(node_num) == len(embedding_look_up)
