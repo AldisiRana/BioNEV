@@ -12,7 +12,7 @@ import numpy as np
 import networkx as nx
 
 from bionev.embed_train import embedding_training
-from bionev.pipeline import do_link_prediction, do_node_classification, create_link_prediction_model
+from bionev.pipeline import do_link_prediction, do_node_classification, create_prediction_model
 from bionev.utils import split_train_test_graph, train_test_graph, read_node_labels
 
 
