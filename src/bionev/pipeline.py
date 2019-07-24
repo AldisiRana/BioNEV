@@ -24,7 +24,7 @@ def do_link_prediction(
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges), seed)
 
     x_train, y_train = get_xy_sets(embeddings, train_graph.edges(), train_neg_edges)
-    clf1 = LogisticRegression(random_state=seed, solver='saga')
+    clf1 = LogisticRegression(random_state=seed, solver='lbfgs')
     clf1.fit(x_train, y_train)
     x_test, y_test = get_xy_sets(embeddings, test_pos_edges, test_neg_edges)
     y_pred_proba = clf1.predict_proba(x_test)[:, 1]
@@ -48,7 +48,7 @@ def create_prediction_model(
 ):
     train_neg_edges = generate_neg_edges(original_graph, len(original_graph.edges()), seed=0)
     x_train, y_train = get_xy_sets(embeddings, original_graph.edges(), train_neg_edges)
-    clf1 = LogisticRegression(random_state=seed, solver='saga')
+    clf1 = LogisticRegression(random_state=seed, solver='lbfgs')
     clf1.fit(x_train, y_train)
     joblib.dump(clf1, 'prediction_model.pkl')
 
