@@ -263,7 +263,7 @@ def main(args):
             batch_size=args.bs)
         embeddings.save_embeddings(args.output)
         original_graph = nx.read_edgelist(args.input)
-        create_link_prediction_model(embeddings=embeddings.get_embeddings(), original_graph=original_graph, seed=args.seed)
+        create_prediction_model(embeddings=embeddings.get_embeddings(), original_graph=original_graph, seed=args.seed)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
 
