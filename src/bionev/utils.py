@@ -110,7 +110,6 @@ def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
 def load_embedding(embedding_file_name, node_list=None):
     with open(embedding_file_name) as f:
         node_num, _ = f.readline().split()
-        print('Nodes with embedding: %s'%node_num)
         embedding_look_up = {}
         if node_list:
             for line in f:
