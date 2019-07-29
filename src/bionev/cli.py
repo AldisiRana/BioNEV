@@ -113,6 +113,7 @@ def parse_args():
     parser.add_argument('--seed',default=0, type=int,  help='seed value')
     parser.add_argument('--training-edgelist', default=None, help='input training edgelist')
     parser.add_argument('--testing-edgelist', default=None, help='input testing edgelist')
+    parser.add_argument('--save-model', default=None, help='save classifier model. Input filepath and name')
     args = parser.parse_args()
 
     return args
@@ -170,11 +171,14 @@ def main(args):
         model.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = do_link_prediction(embeddings=model.get_embeddings(),
-                                    original_graph=G,
-                                    train_graph=G_train,
-                                    test_pos_edges=testing_pos_edges,
-                                    seed=args.seed)
+        result = do_link_prediction(
+            embeddings=model.get_embeddings(),
+            original_graph=G,
+            train_graph=G_train,
+            test_pos_edges=testing_pos_edges,
+            seed=args.seed,
+            save_model=args.save_model
+        )
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
         if None in (args.training_edgelist, args.testing_edgelist):
@@ -263,7 +267,12 @@ def main(args):
             batch_size=args.bs)
         embeddings.save_embeddings(args.output)
         original_graph = nx.read_edgelist(args.input)
-        create_prediction_model(embeddings=embeddings.get_embeddings(), original_graph=original_graph, seed=args.seed)
+        create_prediction_model(
+            embeddings=embeddings.get_embeddings(),
+            original_graph=original_graph,
+            seed=args.seed,
+            save_model=args.save_model
+        )
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
 
