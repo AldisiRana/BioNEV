@@ -4,7 +4,6 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.externals import joblib
 
-from bionev.embed_train import *
 from bionev.utils import *
 
 
@@ -42,6 +41,7 @@ def do_link_prediction(
     print('#' * 50)
     return auc_roc, auc_pr, accuracy, f1, mcc
 
+
 def create_prediction_model(
         *,
         embeddings,
@@ -56,6 +56,7 @@ def create_prediction_model(
     if save_model is not None:
         joblib.dump(clf1, save_model)
 
+
 def do_node_classification(
         *,
         embeddings,
@@ -63,7 +64,7 @@ def do_node_classification(
         labels,
         testing_ratio=0.2,
         seed=0
-        ):
+):
     X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
     binarizer = MultiLabelBinarizer(sparse_output=True)

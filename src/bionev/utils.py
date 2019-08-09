@@ -12,18 +12,18 @@ import bionev.struc2vec.graph as sg
 
 
 def read_for_OpenNE(filename, weighted=False):
-    G = og.Graph()
+    graph = og.Graph()
     print("Loading training graph for learning embedding...")
-    G.read_edgelist(filename=filename, weighted=weighted)
+    graph.read_edgelist(filename=filename, weighted=weighted)
     print("Graph Loaded...")
-    return G
+    return graph
 
 
 def read_for_struc2vec(filename):
     print("Loading training graph for learning embedding...")
-    G = sg.load_edgelist(filename, undirected=True)
+    graph = sg.load_edgelist(filename, undirected=True)
     print("Graph Loaded...")
-    return G
+    return graph
 
 
 def read_for_gae(filename, weighted=False):
@@ -45,53 +45,55 @@ def read_for_gae(filename, weighted=False):
 
 def read_for_SVD(filename, weighted=False):
     if weighted:
-        G = nx.read_weighted_edgelist(filename)
+        graph = nx.read_weighted_edgelist(filename)
     else:
-        G = nx.read_edgelist(filename)
-    return G
+        graph = nx.read_edgelist(filename)
+    return graph
+
 
 def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weighted=False):
-    if (weighted):
-        G = nx.read_weighted_edgelist(input_edgelist)
-        G_train = nx.read_weighted_edgelist(training_edgelist)
-        G_test = nx.read_weighted_edgelist(testing_edgelist)
+    if weighted:
+        graph = nx.read_weighted_edgelist(input_edgelist)
+        g_train = nx.read_weighted_edgelist(training_edgelist)
+        g_test = nx.read_weighted_edgelist(testing_edgelist)
     else:
-        G = nx.read_edgelist(input_edgelist)
-        G_train = nx.read_edgelist(training_edgelist)
-        G_test = nx.read_edgelist(testing_edgelist)
-    testing_pos_edges = G_test.edges
-    node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
+        graph = nx.read_edgelist(input_edgelist)
+        g_train = nx.read_edgelist(training_edgelist)
+        g_test = nx.read_edgelist(testing_edgelist)
+    testing_pos_edges = g_test.edges
+    node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
-    return G, G_train, testing_pos_edges, training_edgelist
+    return graph, g_train, testing_pos_edges, training_edgelist
+
 
 def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=False):
 
-    if (weighted):
-        G = nx.read_weighted_edgelist(input_edgelist)
+    if weighted:
+        graph = nx.read_weighted_edgelist(input_edgelist)
     else:
-        G = nx.read_edgelist(input_edgelist)
-    node_num1, edge_num1 = len(G.nodes), len(G.edges)
+        graph = nx.read_edgelist(input_edgelist)
+    node_num1, edge_num1 = len(graph.nodes), len(graph.edges)
     print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
-    testing_edges_num = int(len(G.edges) * testing_ratio)
+    testing_edges_num = int(len(graph.edges) * testing_ratio)
     if seed is not None:
         random.seed(seed)
-    testing_pos_edges = random.sample(G.edges, testing_edges_num)
-    G_train = copy.deepcopy(G)
+    testing_pos_edges = random.sample(graph.edges, testing_edges_num)
+    g_train = copy.deepcopy(graph)
     for edge in testing_pos_edges:
         node_u, node_v = edge
-        if (G_train.degree(node_u) > 1 and G_train.degree(node_v) > 1):
-            G_train.remove_edge(node_u, node_v)
+        if g_train.degree(node_u) > 1 and g_train.degree(node_v) > 1:
+            g_train.remove_edge(node_u, node_v)
 
     train_graph_filename = 'graph_train.edgelist'
     if weighted:
-        nx.write_edgelist(G_train, train_graph_filename, data=['weight'])
+        nx.write_edgelist(g_train, train_graph_filename, data=['weight'])
     else:
-        nx.write_edgelist(G_train, train_graph_filename, data=False)
+        nx.write_edgelist(g_train, train_graph_filename, data=False)
 
-    node_num1, edge_num1 = len(G_train.nodes), len(G_train.edges)
+    node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
 
-    return G, G_train, testing_pos_edges, train_graph_filename
+    return graph, g_train, testing_pos_edges, train_graph_filename
 
 
 def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
@@ -107,6 +109,7 @@ def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
 
     return random.sample(negative_edges, m)
 
+
 def load_embedding(embedding_file_name, node_list=None):
     with open(embedding_file_name) as f:
         node_num, _ = f.readline().split()
@@ -115,7 +118,7 @@ def load_embedding(embedding_file_name, node_list=None):
             for line in f:
                 vec = line.strip().split()
                 node_id = vec[0]
-                if (node_id in node_list):
+                if node_id in node_list:
                     emb = [float(x) for x in vec[1:]]
                     embedding_look_up[node_id] = list(emb)
 
@@ -148,24 +151,24 @@ def read_node_labels(filename):
     return node_list, labels
 
 
-def split_train_test_classify(embedding_look_up, X, Y, testing_ratio=0.2, seed=0):
+def split_train_test_classify(embedding_look_up, x, y, testing_ratio=0.2, seed=0):
     state = np.random.get_state()
     training_ratio = 1 - testing_ratio
-    training_size = int(training_ratio * len(X))
+    training_size = int(training_ratio * len(x))
     np.random.seed(seed)
-    shuffle_indices = np.random.permutation(np.arange(len(X)))
-    X_train = [embedding_look_up[X[shuffle_indices[i]]] for i in range(training_size)]
-    Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
-    X_test = [embedding_look_up[X[shuffle_indices[i]]] for i in range(training_size, len(X))]
-    Y_test = [Y[shuffle_indices[i]] for i in range(training_size, len(X))]
+    shuffle_indices = np.random.permutation(np.arange(len(x)))
+    x_train = [embedding_look_up[x[shuffle_indices[i]]] for i in range(training_size)]
+    y_train = [y[shuffle_indices[i]] for i in range(training_size)]
+    x_test = [embedding_look_up[x[shuffle_indices[i]]] for i in range(training_size, len(x))]
+    y_test = [y[shuffle_indices[i]] for i in range(training_size, len(x))]
 
-    X_train = np.array(X_train)
-    Y_train = np.array(Y_train)
-    X_test = np.array(X_test)
-    Y_test = np.array(Y_test)
+    x_train = np.array(x_train)
+    y_train = np.array(y_train)
+    x_test = np.array(x_test)
+    y_test = np.array(y_test)
 
     np.random.set_state(state)
-    return X_train, Y_train, X_test, Y_test
+    return x_train, y_train, x_test, y_test
 
 
 def get_y_pred(y_test, y_pred_prob):
@@ -173,9 +176,10 @@ def get_y_pred(y_test, y_pred_prob):
     sort_index = np.flip(np.argsort(y_pred_prob, axis=1), 1)
     for i in range(y_test.shape[0]):
         num = np.sum(y_test[i])
-        for j in range(num):
+        for j in range(len(num)):
             y_pred[i][sort_index[i][j]] = 1
     return y_pred
+
 
 def get_xy_sets(embeddings, graph_edges, neg_edges):
     x = []
