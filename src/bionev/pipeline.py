@@ -1,8 +1,8 @@
+import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.externals import joblib
 
 from bionev.utils import *
 
