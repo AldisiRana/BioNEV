@@ -57,7 +57,7 @@ class _LINE(object):
             self.loss = self.first_loss
         else:
             self.loss = self.second_loss
-        optimizer = tf.train.AdamOptimizer(0.001)
+        optimizer = tf.compat.v1.train.AdamOptimizer(0.001)
         self.train_op = optimizer.minimize(self.loss)
 
     def train_one_epoch(self):
@@ -255,6 +255,7 @@ class LINE(object):
         self.get_embeddings()
         if auto_save and label_file:
             self.vectors = self.best_vector
+        tf.reset_default_graph()
 
     def get_embeddings(self):
         self.last_vectors = self.vectors
