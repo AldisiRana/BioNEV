@@ -171,8 +171,12 @@ def main(args):
         model.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
+        if args.method == 'LINE':
+            embeddings = model.get_embeddings_train()
+        else:
+            embeddings = model.get_embeddings()
         result = do_link_prediction(
-            embeddings=model.get_embeddings(),
+            embeddings=embeddings,
             original_graph=G,
             train_graph=G_train,
             test_pos_edges=testing_pos_edges,
@@ -225,7 +229,11 @@ def main(args):
         model.save_embeddings(args.output)
         time1 = time.time()
         print('Begin evaluation...')
-        result = do_node_classification(embeddings=model.get_embeddings(),
+        if args.method == 'LINE':
+            embeddings = model.get_embeddings_train()
+        else:
+            embeddings = model.get_embeddings()
+        result = do_node_classification(embeddings=embeddings,
                                         node_list=node_list,
                                         labels=labels,
                                         testing_ratio=args.testingratio,
@@ -235,7 +243,7 @@ def main(args):
     else:
         train_graph_filename = args.input
         time1 = time.time()
-        embeddings = embedding_training(
+        model = embedding_training(
             method=args.method,
             train_graph_filename=train_graph_filename,
             OPT1=args.OPT1,
@@ -265,10 +273,14 @@ def main(args):
             nu1=args.nu1,
             nu2=args.nu2,
             batch_size=args.bs)
-        embeddings.save_embeddings(args.output)
+        model.save_embeddings(args.output)
         original_graph = nx.read_edgelist(args.input)
+        if args.method == 'LINE':
+            embeddings = model.get_embeddings_train()
+        else:
+            embeddings = model.get_embeddings()
         create_prediction_model(
-            embeddings=embeddings.get_embeddings(),
+            embeddings=embeddings,
             original_graph=original_graph,
             seed=args.seed,
             save_model=args.save_model
