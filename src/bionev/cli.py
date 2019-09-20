@@ -17,7 +17,7 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.command()
 @click.option('--input', required=True, help='Input graph file. Only accepted edgelist format.')
 @click.option('--output', help='Output graph embedding file', default=None)
-@click.option('--task', choices=['none', 'link-prediction', 'node-classification'], default=None,
+@click.option('--task', type=click.Choice([None, 'link-prediction', 'node-classification']), default=None,
               help='Choose to evaluate the embedding quality based on a specific prediction task. '
                    'None represents no evaluation, and only run for training embedding.')
 @click.option('--testingratio', default=0.2, type=float, help='Testing set ratio for prediction tasks.'
@@ -26,9 +26,9 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.option('--number-walks', default=32, type=int, help='Number of random walks to start at each node. '
                                                            'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--walk-length', default=64, type=int, help='Length of the random walk started at each node. '
-                                                          'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+                                                    'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--workers', default=8, type=int, help='Number of parallel processes. '
-                                                     'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+                                                'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--dimensions', default=100, type=int, help='the dimensions of embedding for each node.')
 @click.option('--window-size', default=10, type=int,
               help='Window size of word2vec model. '
@@ -37,16 +37,16 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.option('--p', default=1.0, type=float, help='p is a hyper-parameter for node2vec, '
                                                    'and it controls how fast the walk explores.')
 @click.option('--q', default=1.0, type=float, help='q is a hyper-parameter for node2vec, '
-                                                   'and it controls how fast the walk leaves the neighborhood of starting node.')
-@click.option('--method', required=True, choices=['Laplacian', 'GF', 'SVD', 'HOPE', 'GraRep', 'DeepWalk', 'node2vec',
-                                                  'struc2vec', 'LINE', 'SDNE', 'GAE'],
-              help='The embedding learning method')
+                                        'and it controls how fast the walk leaves the neighborhood of starting node.')
+@click.option('--method', required=True, type=click.Choice(['Laplacian', 'GF', 'SVD', 'HOPE', 'GraRep', 'DeepWalk',
+            'node2vec', 'struc2vec', 'LINE', 'SDNE', 'GAE']),
+            help='The embedding learning method')
 @click.option('--label-file', default='', help='The label file for node classification')
 @click.option('--negative-ratio', default=5, type=int, help='the negative ratio of LINE')
 @click.option('--weighted', type=bool, default=False, help='Treat graph as weighted')
 @click.option('--directed', type=bool, default=False, help='Treat graph as directed')
 @click.option('--order', default=2, type=int,
-              help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
+    help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
 @click.option('--weight-decay', type=float, default=5e-4,
               help='coefficient for L2 regularization for Graph Factorization.')
 @click.option('--kstep', default=4, type=int, help='Use k-step transition probability matrix for GraRep.')

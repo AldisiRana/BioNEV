@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import copy
-import itertools
-import random
-
-import networkx as nx
-import numpy as np
-
 import bionev.OpenNE.graph as og
 import bionev.struc2vec.graph as sg
+import copy
+import itertools
+import networkx as nx
+import numpy as np
+import random
 
 
 def read_for_OpenNE(filename, weighted=False):
@@ -67,7 +65,6 @@ def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weight
 
 
 def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=False):
-
     if weighted:
         graph = nx.read_weighted_edgelist(input_edgelist)
     else:
@@ -147,7 +144,7 @@ def read_node_labels(filename):
         node_list.append(vec[0])
         labels.append(vec[1:])
     fin.close()
-    print('Nodes with labels: %s'%len(node_list))
+    print('Nodes with labels: %s' % len(node_list))
     return node_list, labels
 
 
