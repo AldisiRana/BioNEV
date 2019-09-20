@@ -6,172 +6,166 @@ import json
 import os
 import random
 import time
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
-import numpy as np
+import click
 import networkx as nx
-
 from bionev.embed_train import embedding_training
 from bionev.pipeline import do_link_prediction, do_node_classification, create_prediction_model
 from bionev.utils import split_train_test_graph, train_test_graph, read_node_labels
 
 
-def parse_args():
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
-                            conflict_handler='resolve')
-    parser.add_argument('--input', required=True,
-                        help='Input graph file. Only accepted edgelist format.')
-    parser.add_argument('--output',
-                        help='Output graph embedding file', required=True)
-    parser.add_argument('--task', choices=[
-        'none',
-        'link-prediction',
-        'node-classification'], default='none',
-                        help='Choose to evaluate the embedding quality based on a specific prediction task. '
-                             'None represents no evaluation, and only run for training embedding.')
-    parser.add_argument('--testingratio', default=0.2, type=float,
-                        help='Testing set ratio for prediction tasks.'
-                             'In link prediction, it splits all the known edges; '
-                             'in node classification, it splits all the labeled nodes.')
-    parser.add_argument('--number-walks', default=32, type=int,
-                        help='Number of random walks to start at each node. '
-                             'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
-    parser.add_argument('--walk-length', default=64, type=int,
-                        help='Length of the random walk started at each node. '
-                             'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
-    parser.add_argument('--workers', default=8, type=int,
-                        help='Number of parallel processes. '
-                             'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
-    parser.add_argument('--dimensions', default=100, type=int,
-                        help='the dimensions of embedding for each node.')
-    parser.add_argument('--window-size', default=10, type=int,
-                        help='Window size of word2vec model. '
-                             'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
-    parser.add_argument('--epochs', default=5, type=int,
-                        help='The training epochs of LINE, SDNE and GAE')
-    parser.add_argument('--p', default=1.0, type=float,
-                        help='p is a hyper-parameter for node2vec, '
-                             'and it controls how fast the walk explores.')
-    parser.add_argument('--q', default=1.0, type=float,
-                        help='q is a hyper-parameter for node2vec, '
-                             'and it controls how fast the walk leaves the neighborhood of starting node.')
-    parser.add_argument('--method', required=True, choices=[
-        'Laplacian',
-        'GF',
-        'SVD',
-        'HOPE',
-        'GraRep',
-        'DeepWalk',
-        'node2vec',
-        'struc2vec',
-        'LINE',
-        'SDNE',
-        'GAE'
-    ], help='The embedding learning method')
-    parser.add_argument('--label-file', default='',
-                        help='The label file for node classification')
-    parser.add_argument('--negative-ratio', default=5, type=int,
-                        help='the negative ratio of LINE')
-    parser.add_argument('--weighted', type=bool, default=False,
-                        help='Treat graph as weighted')
-    parser.add_argument('--directed', type=bool, default=False,
-                        help='Treat graph as directed')
-    parser.add_argument('--order', default=2, type=int,
-                        help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
-    parser.add_argument('--weight-decay', type=float, default=5e-4,
-                        help='coefficient for L2 regularization for Graph Factorization.')
-    parser.add_argument('--kstep', default=4, type=int,
-                        help='Use k-step transition probability matrix for GraRep.')
-    parser.add_argument('--lr', default=0.01, type=float,
-                        help='learning rate')
-    parser.add_argument('--alpha', default=0.3, type=float,
-                        help='alhpa is a hyperparameter in SDNE')
-    parser.add_argument('--beta', default=0, type=float,
-                        help='beta is a hyperparameter in SDNE')
-    parser.add_argument('--nu1', default=1e-5, type=float,
-                        help='nu1 is a hyperparameter in SDNE')
-    parser.add_argument('--nu2', default=1e-4, type=float,
-                        help='nu2 is a hyperparameter in SDNE')
-    parser.add_argument('--bs', default=200, type=int,
-                        help='batch size of SDNE')
-    parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
-                        help='a list of numbers of the neuron at each encoder layer, the last number is the '
-                             'dimension of the output node representation')
-    parser.add_argument('--OPT1', default=True, type=bool,
-                        help='optimization 1 for struc2vec')
-    parser.add_argument('--OPT2', default=True, type=bool,
-                        help='optimization 2 for struc2vec')
-    parser.add_argument('--OPT3', default=True, type=bool,
-                        help='optimization 3 for struc2vec')
-    parser.add_argument('--until-layer', type=int, default=6,
-                        help='Calculation until the layer. A hyper-parameter for struc2vec.')
-    parser.add_argument('--dropout', default=0, type=float, help='Dropout rate (1 - keep probability).')
-    parser.add_argument('--hidden', default=32, type=int, help='Number of units in hidden layer.')
-    parser.add_argument('--gae_model_selection', default='gcn_ae', type=str,
-                        help='gae model selection: gcn_ae or gcn_vae')
-    parser.add_argument('--eval-result-file', help='save evaluation performance')
-    parser.add_argument('--seed',default=0, type=int,  help='seed value')
-    parser.add_argument('--training-edgelist', default=None, help='input training edgelist')
-    parser.add_argument('--testing-edgelist', default=None, help='input testing edgelist')
-    parser.add_argument('--save-model', default=None, help='save classifier model. Input filepath and name')
-    args = parser.parse_args()
-
-    return args
-
-
-def main(args):
+@click.command()
+@click.option('--input', required=True, help='Input graph file. Only accepted edgelist format.')
+@click.option('--output', help='Output graph embedding file', default=None)
+@click.option('--task', choices=['none', 'link-prediction', 'node-classification'], default=None,
+              help='Choose to evaluate the embedding quality based on a specific prediction task. '
+                   'None represents no evaluation, and only run for training embedding.')
+@click.option('--testingratio', default=0.2, type=float, help='Testing set ratio for prediction tasks.'
+                                                              'In link prediction, it splits all the known edges; '
+                                                              'in node classification, it splits all the labeled nodes.')
+@click.option('--number-walks', default=32, type=int, help='Number of random walks to start at each node. '
+                                                           'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+@click.option('--walk-length', default=64, type=int, help='Length of the random walk started at each node. '
+                                                          'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+@click.option('--workers', default=8, type=int, help='Number of parallel processes. '
+                                                     'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+@click.option('--dimensions', default=100, type=int, help='the dimensions of embedding for each node.')
+@click.option('--window-size', default=10, type=int,
+              help='Window size of word2vec model. '
+                   'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+@click.option('--epochs', default=5, type=int, help='The training epochs of LINE, SDNE and GAE')
+@click.option('--p', default=1.0, type=float, help='p is a hyper-parameter for node2vec, '
+                                                   'and it controls how fast the walk explores.')
+@click.option('--q', default=1.0, type=float, help='q is a hyper-parameter for node2vec, '
+                                                   'and it controls how fast the walk leaves the neighborhood of starting node.')
+@click.option('--method', required=True, choices=['Laplacian', 'GF', 'SVD', 'HOPE', 'GraRep', 'DeepWalk', 'node2vec',
+                                                  'struc2vec', 'LINE', 'SDNE', 'GAE'],
+              help='The embedding learning method')
+@click.option('--label-file', default='', help='The label file for node classification')
+@click.option('--negative-ratio', default=5, type=int, help='the negative ratio of LINE')
+@click.option('--weighted', type=bool, default=False, help='Treat graph as weighted')
+@click.option('--directed', type=bool, default=False, help='Treat graph as directed')
+@click.option('--order', default=2, type=int,
+              help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
+@click.option('--weight-decay', type=float, default=5e-4,
+              help='coefficient for L2 regularization for Graph Factorization.')
+@click.option('--kstep', default=4, type=int, help='Use k-step transition probability matrix for GraRep.')
+@click.option('--lr', default=0.01, type=float, help='learning rate')
+@click.option('--alpha', default=0.3, type=float, help='alpha is a hyperparameter in SDNE')
+@click.option('--beta', default=0, type=float, help='beta is a hyperparameter in SDNE')
+@click.option('--nu1', default=1e-5, type=float, help='nu1 is a hyperparameter in SDNE')
+@click.option('--nu2', default=1e-4, type=float, help='nu2 is a hyperparameter in SDNE')
+@click.option('--bs', default=200, type=int, help='batch size of SDNE')
+@click.option('--encoder-list', default='[1000, 128]', type=str,
+              help='a list of numbers of the neuron at each encoder layer, the last number is the '
+                   'dimension of the output node representation')
+@click.option('--OPT1', default=True, type=bool, help='optimization 1 for struc2vec')
+@click.option('--OPT2', default=True, type=bool, help='optimization 2 for struc2vec')
+@click.option('--OPT3', default=True, type=bool, help='optimization 3 for struc2vec')
+@click.option('--until-layer', type=int, default=6,
+              help='Calculation until the layer. A hyper-parameter for struc2vec.')
+@click.option('--dropout', default=0, type=float, help='Dropout rate (1 - keep probability).')
+@click.option('--hidden', default=32, type=int, help='Number of units in hidden layer.')
+@click.option('--gae_model_selection', default='gcn_ae', type=str,
+              help='gae model selection: gcn_ae or gcn_vae')
+@click.option('--eval-result-file', help='save evaluation performance')
+@click.option('--seed', default=random.randint(1, 10000000), type=int, help='seed value')
+@click.option('--training-edgelist', default=None, help='input training edgelist')
+@click.option('--testing-edgelist', default=None, help='input testing edgelist')
+@click.option('--model-path', default=None, help='save classifier model. Input filepath and name')
+def main(
+        input,
+        output,
+        task,
+        testingratio,
+        number_walks,
+        walk_length,
+        workers,
+        dimensions,
+        window_size,
+        epochs,
+        p,
+        q,
+        method,
+        label_file,
+        negative_ratio,
+        weighted,
+        directed,
+        order,
+        weight_decay,
+        kstep,
+        lr,
+        alpha,
+        beta,
+        nu1,
+        nu2,
+        bs,
+        encoder_list,
+        opt1,
+        opt2,
+        opt3,
+        until_layer,
+        dropout,
+        hidden,
+        gae_model_selection,
+        eval_result_file,
+        seed,
+        training_edgelist,
+        testing_edgelist,
+        model_path,
+):
     print('#' * 70)
-    print('Embedding Method: %s, Evaluation Task: %s' % (args.method, args.task))
+    print('Embedding Method: %s, Evaluation Task: %s' % (method, task))
     print('#' * 70)
-
-    if args.task == 'link-prediction':
-        if None not in (args.training_edgelist, args.testing_edgelist):
-            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(args.input,
-                                                                                   args.training_edgelist,
-                                                                                   args.testing_edgelist,
-                                                                                   weighted=args.weighted)
+    if task == 'link-prediction':
+        if None not in (training_edgelist, testing_edgelist):
+            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(input,
+                                                                                   training_edgelist,
+                                                                                   testing_edgelist,
+                                                                                   weighted=weighted)
         else:
-            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(args.input,
-                                                                                         weighted=args.weighted,
-                                                                                         seed=args.seed,
-                                                                                         testing_ratio=args.testingratio)
+            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(input,
+                                                                                         weighted=weighted,
+                                                                                         seed=seed,
+                                                                                         testing_ratio=testingratio)
         time1 = time.time()
         model = embedding_training(
-            method = args.method,
+            method=method,
             train_graph_filename=train_graph_filename,
-            OPT1=args.OPT1,
-            OPT2=args.OPT2,
-            OPT3=args.OPT3,
-            until_layer=args.until_layer,
-            workers=args.workers,
-            number_walks=args.number_walks,
-            walk_length=args.walk_length,
-            dimensions=args.dimensions,
-            window_size=args.window_size,
-            seed=args.seed,
-            learning_rate=args.lr,
-            epochs=args.epochs,
-            hidden=args.hidden,
-            weight_decay=args.weight_decay,
-            dropout=args.dropout,
-            gae_model_selection=args.gae_model_selection,
-            kstep=args.kstep,
-            weighted=args.weighted,
-            p=args.p,
-            q=args.q,
-            order=args.order,
-            encoder_list=args.encoder_list,
-            alpha=args.alpha,
-            beta=args.beta,
-            nu1=args.nu1,
-            nu2=args.nu2,
-            batch_size=args.bs)
+            OPT1=opt1,
+            OPT2=opt2,
+            OPT3=opt3,
+            until_layer=until_layer,
+            workers=workers,
+            number_walks=number_walks,
+            walk_length=walk_length,
+            dimensions=dimensions,
+            window_size=window_size,
+            seed=seed,
+            learning_rate=lr,
+            epochs=epochs,
+            hidden=hidden,
+            weight_decay=weight_decay,
+            dropout=dropout,
+            gae_model_selection=gae_model_selection,
+            kstep=kstep,
+            weighted=weighted,
+            p=p,
+            q=q,
+            order=order,
+            encoder_list=encoder_list,
+            alpha=alpha,
+            beta=beta,
+            nu1=nu1,
+            nu2=nu2,
+            batch_size=bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        model.save_embeddings(args.output)
+        if output is not None:
+            model.save_embeddings(output)
         time1 = time.time()
         print('Begin evaluation...')
-        if args.method == 'LINE':
+        if method == 'LINE':
             embeddings = model.get_embeddings_train()
         else:
             embeddings = model.get_embeddings()
@@ -180,126 +174,132 @@ def main(args):
             original_graph=G,
             train_graph=G_train,
             test_pos_edges=testing_pos_edges,
-            seed=args.seed,
-            save_model=args.save_model
+            seed=seed,
+            save_model=model_path
         )
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
-        if None in (args.training_edgelist, args.testing_edgelist):
+        if None in (training_edgelist, testing_edgelist):
             os.remove(train_graph_filename)
 
-    elif args.task == 'node-classification':
-        if not args.label_file:
+    elif task == 'node-classification':
+        if not label_file:
             raise ValueError("No input label file. Exit.")
-        node_list, labels = read_node_labels(args.label_file)
-        train_graph_filename = args.input
+        node_list, labels = read_node_labels(label_file)
+        train_graph_filename = input
         time1 = time.time()
         model = embedding_training(
-            method=args.method,
+            method=method,
             train_graph_filename=train_graph_filename,
-            OPT1=args.OPT1,
-            OPT2=args.OPT2,
-            OPT3=args.OPT3,
-            until_layer=args.until_layer,
-            workers=args.workers,
-            number_walks=args.number_walks,
-            walk_length=args.walk_length,
-            dimensions=args.dimensions,
-            window_size=args.window_size,
-            seed=args.seed,
-            learning_rate=args.lr,
-            epochs=args.epochs,
-            hidden=args.hidden,
-            weight_decay=args.weight_decay,
-            dropout=args.dropout,
-            gae_model_selection=args.gae_model_selection,
-            kstep=args.kstep,
-            weighted=args.weighted,
-            p=args.p,
-            q=args.q,
-            order=args.order,
-            encoder_list=args.encoder_list,
-            alpha=args.alpha,
-            beta=args.beta,
-            nu1=args.nu1,
-            nu2=args.nu2,
-            batch_size=args.bs)
+            OPT1=opt1,
+            OPT2=opt2,
+            OPT3=opt3,
+            until_layer=until_layer,
+            workers=workers,
+            number_walks=number_walks,
+            walk_length=walk_length,
+            dimensions=dimensions,
+            window_size=window_size,
+            seed=seed,
+            learning_rate=lr,
+            epochs=epochs,
+            hidden=hidden,
+            weight_decay=weight_decay,
+            dropout=dropout,
+            gae_model_selection=gae_model_selection,
+            kstep=kstep,
+            weighted=weighted,
+            p=p,
+            q=q,
+            order=order,
+            encoder_list=encoder_list,
+            alpha=alpha,
+            beta=beta,
+            nu1=nu1,
+            nu2=nu2,
+            batch_size=bs)
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
-        model.save_embeddings(args.output)
+        if output is not None:
+            model.save_embeddings(output)
         time1 = time.time()
         print('Begin evaluation...')
-        if args.method == 'LINE':
+        if method == 'LINE':
             embeddings = model.get_embeddings_train()
         else:
             embeddings = model.get_embeddings()
-        result = do_node_classification(embeddings=embeddings,
-                                        node_list=node_list,
-                                        labels=labels,
-                                        testing_ratio=args.testingratio,
-                                        seed=args.seed)
+        result = do_node_classification(
+            embeddings=embeddings,
+            node_list=node_list,
+            labels=labels,
+            testing_ratio=testingratio,
+            seed=seed,
+            save_model=model_path
+        )
         eval_time = time.time() - time1
         print('Prediction Task Time: %.2f s' % eval_time)
     else:
-        train_graph_filename = args.input
+        train_graph_filename = input
         time1 = time.time()
         model = embedding_training(
-            method=args.method,
+            method=method,
             train_graph_filename=train_graph_filename,
-            OPT1=args.OPT1,
-            OPT2=args.OPT2,
-            OPT3=args.OPT3,
-            until_layer=args.until_layer,
-            workers=args.workers,
-            number_walks=args.number_walks,
-            walk_length=args.walk_length,
-            dimensions=args.dimensions,
-            window_size=args.window_size,
-            seed=args.seed,
-            learning_rate=args.lr,
-            epochs=args.epochs,
-            hidden=args.hidden,
-            weight_decay=args.weight_decay,
-            dropout=args.dropout,
-            gae_model_selection=args.gae_model_selection,
-            kstep=args.kstep,
-            weighted=args.weighted,
-            p=args.p,
-            q=args.q,
-            order=args.order,
-            encoder_list=args.encoder_list,
-            alpha=args.alpha,
-            beta=args.beta,
-            nu1=args.nu1,
-            nu2=args.nu2,
-            batch_size=args.bs)
-        model.save_embeddings(args.output)
-        original_graph = nx.read_edgelist(args.input)
-        if args.method == 'LINE':
+            OPT1=opt1,
+            OPT2=opt2,
+            OPT3=opt3,
+            until_layer=until_layer,
+            workers=workers,
+            number_walks=number_walks,
+            walk_length=walk_length,
+            dimensions=dimensions,
+            window_size=window_size,
+            seed=seed,
+            learning_rate=lr,
+            epochs=epochs,
+            hidden=hidden,
+            weight_decay=weight_decay,
+            dropout=dropout,
+            gae_model_selection=gae_model_selection,
+            kstep=kstep,
+            weighted=weighted,
+            p=p,
+            q=q,
+            order=order,
+            encoder_list=encoder_list,
+            alpha=alpha,
+            beta=beta,
+            nu1=nu1,
+            nu2=nu2,
+            batch_size=bs
+        )
+        if output is not None:
+            model.save_embeddings(output)
+        original_graph = nx.read_edgelist(input)
+        if method == 'LINE':
             embeddings = model.get_embeddings_train()
         else:
             embeddings = model.get_embeddings()
         create_prediction_model(
             embeddings=embeddings,
             original_graph=original_graph,
-            seed=args.seed,
-            save_model=args.save_model
+            seed=seed,
+            save_model=model_path
         )
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
 
-    if args.eval_result_file and result:
+    if eval_result_file and result:
         _results = dict(
-            input=args.input,
-            task=args.task,
-            method=args.method,
-            dimension=args.dimensions,
+            input=input,
+            task=task,
+            method=method,
+            dimension=dimensions,
             user=getpass.getuser(),
             date=datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S'),
-            seed=args.seed,
+            seed=seed,
         )
 
-        if args.task == 'link-prediction':
+        if task == 'link-prediction':
             auc_roc, auc_pr, accuracy, f1, mcc = result
             _results['results'] = dict(
                 auc_roc=auc_roc,
@@ -317,17 +317,9 @@ def main(args):
                 f1_macro=f1_macro,
             )
 
-        with open(args.eval_result_file, 'a+') as wf:
+        with open(eval_result_file, 'a+') as wf:
             print(json.dumps(_results, sort_keys=True), file=wf)
 
 
-def more_main():
-    args = parse_args()
-    seed = args.seed
-    random.seed(seed)
-    np.random.seed(seed)
-    main(parse_args())
-
-
 if __name__ == "__main__":
-    more_main()
+    main()
