@@ -17,7 +17,7 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.command()
 @click.option('--input', required=True, help='Input graph file. Only accepted edgelist format.')
 @click.option('--output', help='Output graph embedding file', default=None)
-@click.option('--task', type=click.Choice([None, 'link-prediction', 'node-classification']), default=None,
+@click.option('--task', type=click.Choice(['none', 'link-prediction', 'node-classification']), default=None,
               help='Choose to evaluate the embedding quality based on a specific prediction task. '
                    'None represents no evaluation, and only run for training embedding.')
 @click.option('--testingratio', default=0.2, type=float, help='Testing set ratio for prediction tasks.'
@@ -309,10 +309,9 @@ def main(
                 mcc=mcc,
             )
         else:
-            accuracy, mcc, f1_micro, f1_macro = result
+            accuracy, f1_micro, f1_macro = result
             _results['results'] = dict(
                 accuracy=accuracy,
-                mcc=mcc,
                 f1_micro=f1_micro,
                 f1_macro=f1_macro,
             )

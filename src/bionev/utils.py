@@ -173,7 +173,7 @@ def get_y_pred(y_test, y_pred_prob):
     sort_index = np.flip(np.argsort(y_pred_prob, axis=1), 1)
     for i in range(y_test.shape[0]):
         num = np.sum(y_test[i])
-        for j in range(len(num)):
+        for j in range(num):
             y_pred[i][sort_index[i][j]] = 1
     return y_pred
 

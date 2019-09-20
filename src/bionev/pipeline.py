@@ -63,7 +63,8 @@ def do_node_classification(
         node_list,
         labels,
         testing_ratio=0.2,
-        seed=0
+        seed=0,
+        save_model,
 ):
     X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
@@ -80,12 +81,13 @@ def do_node_classification(
     y_pred = get_y_pred(y_test, y_pred_prob)
 
     accuracy = accuracy_score(y_test, y_pred)
-    mcc = matthews_corrcoef(y_test, y_pred)
+    #mcc = matthews_corrcoef(y_test, y_pred)
     micro_f1 = f1_score(y_test, y_pred, average="micro")
     macro_f1 = f1_score(y_test, y_pred, average="macro")
-    joblib.dump(model, 'saved_model.pkl')
+    if save_model is not None:
+        joblib.dump(model, save_model)
 
     print('#' * 9 + ' Node Classification Performance ' + '#' * 9)
-    print(f'Accuracy: {accuracy:.3f}, MCC: {mcc:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}')
+    print(f'Accuracy: {accuracy:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}')
     print('#' * 50)
-    return accuracy, mcc, micro_f1, macro_f1
+    return accuracy, micro_f1, macro_f1
