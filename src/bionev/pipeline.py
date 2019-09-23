@@ -64,7 +64,7 @@ def do_node_classification(
         labels,
         testing_ratio=0.2,
         seed=0,
-        save_model,
+        save_model=None,
 ):
     X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
