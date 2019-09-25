@@ -3,6 +3,7 @@
 import networkx as nx
 import numpy as np
 import scipy.sparse.linalg as lg
+import joblib
 
 __author__ = "Alan WANG"
 __email__ = "alan1995wang@outlook.com"
@@ -60,3 +61,6 @@ class HOPE(object):
             fout.write("{} {}\n".format(node,
                                         ' '.join([str(x) for x in vec])))
         fout.close()
+
+    def save_model(self, path):
+        joblib.dump(self, path)

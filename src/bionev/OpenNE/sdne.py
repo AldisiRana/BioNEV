@@ -2,6 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
+import joblib
 
 __author__ = "Wang Binlu"
 __email__ = "wblmail@whu.edu.cn"
@@ -311,3 +312,6 @@ class SDNE2(object):
         for node, vec in self.vectors.items():
             fout.write("{} {}\n".format(node, ' '.join([str(x) for x in vec])))
         fout.close()
+
+    def save_model(self, path):
+        joblib.dump(self, path)

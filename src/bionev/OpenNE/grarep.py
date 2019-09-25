@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.sparse.linalg import svds
 from sklearn.preprocessing import normalize
+import joblib
 
 
 class GraRep(object):
@@ -83,3 +84,6 @@ class GraRep(object):
         look_back = self.g.look_back_list
         for i, embedding in enumerate(self.RepMat):
             self.vectors[look_back[i]] = embedding
+
+    def save_model(self, path):
+        joblib.dump(self, path)

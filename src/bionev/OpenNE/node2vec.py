@@ -59,7 +59,7 @@ class Node2vec(object):
     def get_embeddings(self):
         return self.vectors
 
-    def save_node2vec_model(self, path):
+    def save_model(self, path):
         joblib.dump(self, path)
 
     def save_embeddings(self, filename):

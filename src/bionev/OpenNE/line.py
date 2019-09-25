@@ -6,6 +6,7 @@ import random
 import numpy as np
 import tensorflow as tf
 from sklearn.linear_model import LogisticRegression
+import joblib
 
 from bionev.OpenNE.classify import Classifier, read_node_label
 
@@ -279,3 +280,6 @@ class LINE(object):
             fout.write("{} {}\n".format(node,
                                         ' '.join([str(x) for x in vec])))
         fout.close()
+
+    def save_model(self, path):
+        joblib.dump(self, path)
