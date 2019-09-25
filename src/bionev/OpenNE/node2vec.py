@@ -41,9 +41,8 @@ class Node2vec(object):
         for word in self.graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
 
-    def update_node2vec(self, graph):
-        self.graph = og.Graph()
-        self.graph.read_edgelist(graph, weighted=False)
+    def update_model(self, graph):
+        self.graph = graph
         self.walker.update = True
         self.walker.G = self.graph.G
         print("Preprocess transition probs...")
