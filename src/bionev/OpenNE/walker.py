@@ -58,12 +58,16 @@ class BasicWalker:
 
 
 class Walker:
-    def __init__(self, G, p, q, workers):
+    def __init__(self, G, p, q, update, vectors, workers):
         self.G = G.G
         self.p = p
         self.q = q
         self.node_size = G.node_size
         self.look_up_dict = G.look_up_dict
+        self.update = update
+        self.vectors = vectors
+        self.alias_nodes = {}
+        self.alias_edges = {}
 
     def node2vec_walk(self, walk_length, start_node):
         '''
@@ -107,6 +111,8 @@ class Walker:
             # print(str(walk_iter+1), '/', str(num_walks))
             random.shuffle(nodes)
             for node in nodes:
+                if self.update and node in self.vectors.keys():
+                    continue
                 walks.append(self.node2vec_walk(
                     walk_length=walk_length, start_node=node))
         print('Walk finished...')
@@ -140,25 +146,24 @@ class Walker:
         '''
         G = self.G
 
-        alias_nodes = {}
         for node in G.nodes():
+            if self.update and node in self.alias_nodes.keys():
+                continue
             unnormalized_probs = [G[node][nbr]['weight']
                                   for nbr in G.neighbors(node)]
             norm_const = sum(unnormalized_probs)
             normalized_probs = [
                 float(u_prob) / norm_const for u_prob in unnormalized_probs]
-            alias_nodes[node] = alias_setup(normalized_probs)
+            self.alias_nodes[node] = alias_setup(normalized_probs)
 
-        alias_edges = {}
         triads = {}
 
         look_up_dict = self.look_up_dict
         node_size = self.node_size
         for edge in G.edges():
-            alias_edges[edge] = self.get_alias_edge(edge[0], edge[1])
-
-        self.alias_nodes = alias_nodes
-        self.alias_edges = alias_edges
+            if self.update and edge in self.alias_edges.keys():
+                continue
+            self.alias_edges[edge] = self.get_alias_edge(edge[0], edge[1])
 
         return
 
