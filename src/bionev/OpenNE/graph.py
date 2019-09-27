@@ -27,7 +27,10 @@ class Graph(object):
             self.G.nodes[node]['status'] = ''
 
     def read_g(self, g):
-        self.G = g
+        self.G = nx.DiGraph()
+        self.G.add_edges_from(g.edges())
+        for i, j in self.G.edges():
+            self.G[i][j]['weight'] = 1.0
         self.encode_node()
 
     def read_adjlist(self, filename):
