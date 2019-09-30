@@ -39,7 +39,6 @@ class Node2vec(object):
         self.word2vec = Word2Vec(**kwargs)
         for word in graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
-        self.word2vec.model.save("word2vec.model")
         walker.remove_graph()
 
 
