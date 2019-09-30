@@ -18,7 +18,6 @@ class Node2vec(object):
             q = 1.0
         self.path_length = path_length
         self.num_paths = num_paths
-        self.graph = graph
         self.vectors = {}
         if dw:
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
@@ -38,19 +37,18 @@ class Node2vec(object):
         self.size = kwargs["size"]
         print("Learning representation...")
         self.word2vec = Word2Vec(**kwargs)
-        for word in self.graph.G.nodes():
+        for word in graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
 
     def update_model(self, graph):
-        self.graph = graph
         self.walker.update = True
-        self.walker.G = self.graph.G
+        self.walker.G = graph.G
         print("Preprocess transition probs...")
         self.walker.preprocess_transition_probs()
         sentences = self.walker.simulate_walks(
             num_walks=self.num_paths, walk_length=self.path_length)
         self.word2vec.build_vocab(sentences=sentences, update=True)
-        for word in self.graph.G.nodes():
+        for word in graph.G.nodes():
             if word in self.vectors.keys():
                 continue
             self.vectors[word] = self.word2vec.wv[word]
