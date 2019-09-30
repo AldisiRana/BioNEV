@@ -1,8 +1,10 @@
 import joblib
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import ElasticNet, LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 from bionev.utils import *
 
@@ -15,6 +17,7 @@ def do_link_prediction(
         test_pos_edges,
         seed,
         save_model=None,
+        classifier_type=None,
 ):
     random.seed(seed)
     train_neg_edges = generate_neg_edges(original_graph, len(train_graph.edges()), seed=0)
@@ -24,18 +27,26 @@ def do_link_prediction(
     test_neg_edges = generate_neg_edges(G_aux, len(test_pos_edges), seed)
 
     x_train, y_train = get_xy_sets(embeddings, train_graph.edges(), train_neg_edges)
-    clf1 = LogisticRegression(random_state=seed, solver='lbfgs')
-    clf1.fit(x_train, y_train)
+    if classifier_type == 'SVM':
+        clf = SVC(gamma='auto')
+    elif classifier_type == 'RF':
+        clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
+    elif classifier_type == 'EN':
+        ElasticNet(random_state=seed)
+    else:
+        clf = LogisticRegression(random_state=seed, solver='lbfgs')
+
+    clf.fit(x_train, y_train)
     x_test, y_test = get_xy_sets(embeddings, test_pos_edges, test_neg_edges)
-    y_pred_proba = clf1.predict_proba(x_test)[:, 1]
-    y_pred = clf1.predict(x_test)
+    y_pred_proba = clf.predict_proba(x_test)[:, 1]
+    y_pred = clf.predict(x_test)
     auc_roc = roc_auc_score(y_test, y_pred_proba)
     auc_pr = average_precision_score(y_test, y_pred_proba)
     accuracy = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
     if save_model is not None:
-        joblib.dump(clf1, save_model)
+        joblib.dump(clf, save_model)
     print('#' * 9 + ' Link Prediction Performance ' + '#' * 9)
     print(f'AUC-ROC: {auc_roc:.3f}, AUC-PR: {auc_pr:.3f}, Accuracy: {accuracy:.3f}, F1: {f1:.3f}, MCC: {mcc:.3f}')
     print('#' * 50)
@@ -65,6 +76,7 @@ def do_node_classification(
         testing_ratio=0.2,
         seed=0,
         save_model=None,
+        classifier_type=None,
 ):
     X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
@@ -73,7 +85,15 @@ def do_node_classification(
     binarizer.fit(y_all)
     y_train = binarizer.transform(y_train).todense()
     y_test = binarizer.transform(y_test).todense()
-    model = OneVsRestClassifier(LogisticRegression(random_state=seed, solver='lbfgs'))
+    if classifier_type == 'SVM':
+        clf = SVC(gamma='auto')
+    elif classifier_type == 'RF':
+        clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
+    elif classifier_type == 'EN':
+        ElasticNet(random_state=seed)
+    else:
+        clf = LogisticRegression(random_state=seed, solver='lbfgs')
+    model = OneVsRestClassifier(clf)
     model.fit(X_train, y_train)
     y_pred_prob = model.predict_proba(X_test)
 
