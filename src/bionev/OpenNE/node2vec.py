@@ -23,7 +23,7 @@ class Node2vec(object):
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
         else:
             self.walker = walker.Walker(
-                graph, p=p, q=q, update=False, vectors=self.vectors, workers=kwargs["workers"])
+                graph, p=p, q=q, update=False, workers=kwargs["workers"])
             print("Preprocess transition probs...")
             self.walker.preprocess_transition_probs()
 
