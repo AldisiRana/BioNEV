@@ -39,7 +39,6 @@ class Node2vec(object):
         self.word2vec = Word2Vec(**kwargs)
         for word in graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
-        walker.remove_graph()
 
 
     def update_model(self, graph):
@@ -59,6 +58,7 @@ class Node2vec(object):
         return self.vectors
 
     def save_model(self, path):
+        self.walker.remove_graph()
         joblib.dump(self, path)
 
     def save_embeddings(self, filename):
