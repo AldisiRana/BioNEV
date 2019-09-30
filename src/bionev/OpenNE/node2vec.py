@@ -58,7 +58,6 @@ class Node2vec(object):
         return self.vectors
 
     def save_model(self, path):
-        self.walker.remove_graph()
         joblib.dump(self, path)
 
     def save_embeddings(self, filename):

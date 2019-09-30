@@ -149,8 +149,6 @@ class Walker:
 
         return
 
-    def remove_graph(self):
-        del self.G
 
 def alias_setup(probs):
     '''
