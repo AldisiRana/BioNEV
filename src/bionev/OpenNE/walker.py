@@ -54,14 +54,13 @@ class BasicWalker:
 
 
 class Walker:
-    def __init__(self, G, p, q, update, vectors, workers):
+    def __init__(self, G, p, q, update, workers):
         self.G = G.G
         self.p = p
         self.q = q
         self.node_size = G.node_size
         self.look_up_dict = G.look_up_dict
         self.update = update
-        self.vectors = vectors
         self.alias_nodes = {}
         self.alias_edges = {}
 
@@ -90,7 +89,7 @@ class Walker:
 
         return walk
 
-    def simulate_walks(self, num_walks, walk_length):
+    def simulate_walks(self, num_walks, walk_length, vectors):
         '''
         Repeatedly simulate random walks from each node.
         '''
@@ -101,7 +100,7 @@ class Walker:
             # print(str(walk_iter+1), '/', str(num_walks))
             random.shuffle(nodes)
             for node in nodes:
-                if self.update and node in self.vectors.keys():
+                if self.update and node in vectors.keys():
                     continue
                 walks.append(self.node2vec_walk(
                     walk_length=walk_length, start_node=node))
@@ -150,6 +149,8 @@ class Walker:
 
         return
 
+    def remove_graph(self):
+        del self.G
 
 def alias_setup(probs):
     '''

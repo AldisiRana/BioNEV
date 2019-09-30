@@ -28,7 +28,7 @@ class Node2vec(object):
             self.walker.preprocess_transition_probs()
 
         sentences = self.walker.simulate_walks(
-            num_walks=self.num_paths, walk_length=self.path_length)
+            num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
         kwargs["sentences"] = sentences
         kwargs["min_count"] = kwargs.get("min_count", 0)
         kwargs["size"] = kwargs.get("size", dim)
@@ -39,6 +39,9 @@ class Node2vec(object):
         self.word2vec = Word2Vec(**kwargs)
         for word in graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
+        self.word2vec.model.save("word2vec.model")
+        walker.remove_graph()
+
 
     def update_model(self, graph):
         self.walker.update = True
@@ -46,7 +49,7 @@ class Node2vec(object):
         print("Preprocess transition probs...")
         self.walker.preprocess_transition_probs()
         sentences = self.walker.simulate_walks(
-            num_walks=self.num_paths, walk_length=self.path_length)
+            num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
         self.word2vec.build_vocab(sentences=sentences, update=True)
         for word in graph.G.nodes():
             if word in self.vectors.keys():
