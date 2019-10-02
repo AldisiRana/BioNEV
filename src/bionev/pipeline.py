@@ -1,5 +1,5 @@
 import joblib
-from sklearn.linear_model import ElasticNet, LogisticRegression
+from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -28,11 +28,11 @@ def do_link_prediction(
 
     x_train, y_train = get_xy_sets(embeddings, train_graph.edges(), train_neg_edges)
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto', probability=True)
+        clf = SVC(gamma='auto', probability=True, random_state=seed)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        clf = ElasticNet(random_state=seed)
+        clf = SGDClassifier(loss="log", penalty="elasticnet", random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
 
@@ -64,11 +64,11 @@ def create_prediction_model(
     train_neg_edges = generate_neg_edges(original_graph, len(original_graph.edges()), seed=0)
     x_train, y_train = get_xy_sets(embeddings, original_graph.edges(), train_neg_edges)
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto', probability=True)
+        clf = SVC(gamma='auto', probability=True, random_state=seed)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        clf = ElasticNet(random_state=seed)
+        clf = SGDClassifier(loss="log", penalty="elasticnet", random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
     clf.fit(x_train, y_train)
@@ -94,11 +94,11 @@ def do_node_classification(
     y_train = binarizer.transform(y_train).todense()
     y_test = binarizer.transform(y_test).todense()
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto')
+        clf = SVC(gamma='auto', random_state=seed)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        clf = ElasticNet(random_state=seed)
+        clf = SGDClassifier(loss="log", penalty="elasticnet", random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
     model = OneVsRestClassifier(clf)
