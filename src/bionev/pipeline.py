@@ -94,7 +94,7 @@ def do_node_classification(
     y_train = binarizer.transform(y_train).todense()
     y_test = binarizer.transform(y_test).todense()
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto', random_state=seed)
+        clf = SVC(gamma='auto', probability=True, random_state=seed)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
