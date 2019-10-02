@@ -28,7 +28,7 @@ def do_link_prediction(
 
     x_train, y_train = get_xy_sets(embeddings, train_graph.edges(), train_neg_edges)
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto')
+        clf = SVC(gamma='auto', probability=True)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
@@ -64,7 +64,7 @@ def create_prediction_model(
     train_neg_edges = generate_neg_edges(original_graph, len(original_graph.edges()), seed=0)
     x_train, y_train = get_xy_sets(embeddings, original_graph.edges(), train_neg_edges)
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto')
+        clf = SVC(gamma='auto', probability=True)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
