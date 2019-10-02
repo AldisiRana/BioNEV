@@ -59,7 +59,7 @@ def create_prediction_model(
         original_graph,
         seed,
         save_model=None,
-        classifier_type='LR',
+        classifier_type=None,
 ):
     train_neg_edges = generate_neg_edges(original_graph, len(original_graph.edges()), seed=0)
     x_train, y_train = get_xy_sets(embeddings, original_graph.edges(), train_neg_edges)
