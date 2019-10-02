@@ -32,7 +32,7 @@ def do_link_prediction(
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        ElasticNet(random_state=seed)
+        clf = ElasticNet(random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
 
@@ -68,7 +68,7 @@ def create_prediction_model(
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        ElasticNet(random_state=seed)
+        clf = ElasticNet(random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
     clf.fit(x_train, y_train)
@@ -98,7 +98,7 @@ def do_node_classification(
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
-        ElasticNet(random_state=seed)
+        clf = ElasticNet(random_state=seed)
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
     model = OneVsRestClassifier(clf)
