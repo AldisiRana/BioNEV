@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import json
 
 from gensim.models import Word2Vec
 
 from bionev.OpenNE import walker
 import bionev.OpenNE.graph as og
 
+from ast import literal_eval
 import joblib
 
 class Node2vec(object):
@@ -40,11 +42,14 @@ class Node2vec(object):
         for word in graph.G.nodes():
             self.vectors[word] = self.word2vec.wv[word]
 
-
-    def update_model(self, graph):
+    def update_model(self, graph, alias_edges_path=None):
         self.walker.update = True
         self.walker.G = graph.G
         print("Preprocess transition probs...")
+        if alias_edges_path is not None:
+            with open(alias_edges_path, 'r') as f:
+                obj = json.load(f)
+                self.walker.alias_edges = {literal_eval(k): literal_eval(v) for k, v in obj.items()}
         self.walker.preprocess_transition_probs()
         sentences = self.walker.simulate_walks(
             num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
@@ -57,8 +62,12 @@ class Node2vec(object):
     def get_embeddings(self):
         return self.vectors
 
-    def save_model(self, path):
-        joblib.dump(self, path)
+    def save_model(self, model_path, alias_edges_path=None):
+        if alias_edges_path is not None:
+            with open(alias_edges_path, 'w') as f:
+                json.dump({str(k): v.tolist() for k, v in self.walker.alias_edges.items()}, f)
+            self.walker.alias_edges.clear()
+        joblib.dump(self, model_path)
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
