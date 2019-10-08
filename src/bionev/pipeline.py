@@ -86,13 +86,13 @@ def do_node_classification(
         save_model=None,
         classifier_type=None,
 ):
-    X_train, y_train, X_test, y_test = split_train_test_classify(embeddings, node_list, labels,
+    x_train, y_train, x_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
-    binarizer = MultiLabelBinarizer(sparse_output=True)
-    y_all = np.append(y_train, y_test)
-    binarizer.fit(y_all)
-    y_train = binarizer.transform(y_train).todense()
-    y_test = binarizer.transform(y_test).todense()
+    # binarizer = MultiLabelBinarizer(sparse_output=True)
+    # y_all = np.append(y_train, y_test)
+    # binarizer.fit(y_all)
+    # y_train = binarizer.transform(y_train).todense()
+    # y_test = binarizer.transform(y_test).todense()
     if classifier_type == 'SVM':
         clf = SVC(gamma='auto', probability=True, random_state=seed)
     elif classifier_type == 'RF':
@@ -102,20 +102,20 @@ def do_node_classification(
     else:
         clf = LogisticRegression(random_state=seed, solver='lbfgs')
     model = OneVsRestClassifier(clf)
-    model.fit(X_train, y_train)
-    y_pred_prob = model.predict_proba(X_test)
+    model.fit(x_train, y_train)
+    # y_pred_prob = model.predict_proba(x_test)
 
     ## small trick : we assume that we know how many label to predict
-    y_pred = get_y_pred(y_test, y_pred_prob)
-
+    # y_pred = get_y_pred(y_test, y_pred_prob)
+    y_pred = clf.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
-    #mcc = matthews_corrcoef(y_test, y_pred)
+    mcc = matthews_corrcoef(y_test, clf.predict(x_test))
     micro_f1 = f1_score(y_test, y_pred, average="micro")
     macro_f1 = f1_score(y_test, y_pred, average="macro")
     if save_model is not None:
         joblib.dump(model, save_model)
 
     print('#' * 9 + ' Node Classification Performance ' + '#' * 9)
-    print(f'Accuracy: {accuracy:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}')
+    print(f'Accuracy: {accuracy:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}, MCC: {mcc:.3f}')
     print('#' * 50)
-    return accuracy, micro_f1, macro_f1
+    return accuracy, micro_f1, macro_f1, mcc

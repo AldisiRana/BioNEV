@@ -316,7 +316,8 @@ def train_embed_node2vec(
         workers=workers,
         p=p,
         q=q,
-        window=window_size)
+        window=window_size,
+    )
     return model
 
 def train_embed_line(

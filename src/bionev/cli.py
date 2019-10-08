@@ -309,11 +309,12 @@ def main(
                 mcc=mcc,
             )
         else:
-            accuracy, f1_micro, f1_macro = result
+            accuracy, f1_micro, f1_macro, mcc = result
             _results['results'] = dict(
                 accuracy=accuracy,
                 f1_micro=f1_micro,
                 f1_macro=f1_macro,
+                mcc=mcc
             )
 
         with open(eval_result_file, 'a+') as wf:
