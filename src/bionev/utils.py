@@ -159,10 +159,10 @@ def split_train_test_classify(embedding_look_up, x, y, testing_ratio=0.2, seed=0
     x_test = [embedding_look_up[x[shuffle_indices[i]]] for i in range(training_size, len(x))]
     y_test = [y[shuffle_indices[i]] for i in range(training_size, len(x))]
 
-    x_train = np.array(x_train)
-    y_train = np.array(y_train)
-    x_test = np.array(x_test)
-    y_test = np.array(y_test)
+    x_train = np.array(x_train).ravel()
+    y_train = np.array(y_train).ravel()
+    x_test = np.array(x_test).ravel()
+    y_test = np.array(y_test).ravel()
 
     np.random.set_state(state)
     return x_train, y_train, x_test, y_test
