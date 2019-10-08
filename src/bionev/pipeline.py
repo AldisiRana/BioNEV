@@ -86,8 +86,6 @@ def do_node_classification(
         save_model=None,
         classifier_type=None,
 ):
-    for key, val in embeddings.items():
-        if key in
     x_train, y_train, x_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
 
