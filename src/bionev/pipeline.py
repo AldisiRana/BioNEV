@@ -86,8 +86,11 @@ def do_node_classification(
         save_model=None,
         classifier_type=None,
 ):
+    for key, val in embeddings.items():
+        if key in
     x_train, y_train, x_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
+
     # binarizer = MultiLabelBinarizer(sparse_output=True)
     # y_all = np.append(y_train, y_test)
     # binarizer.fit(y_all)
@@ -107,9 +110,9 @@ def do_node_classification(
 
     ## small trick : we assume that we know how many label to predict
     # y_pred = get_y_pred(y_test, y_pred_prob)
-    y_pred = clf.predict(x_test)
+    y_pred = model.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
-    mcc = matthews_corrcoef(y_test, clf.predict(x_test))
+    mcc = matthews_corrcoef(y_test, y_pred)
     micro_f1 = f1_score(y_test, y_pred, average="micro")
     macro_f1 = f1_score(y_test, y_pred, average="macro")
     if save_model is not None:
