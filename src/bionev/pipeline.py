@@ -98,13 +98,13 @@ def do_node_classification(
     # y_train = binarizer.transform(y_train).todense()
     # y_test = binarizer.transform(y_test).todense()
     if classifier_type == 'SVM':
-        clf = LinearSVC(random_state=seed, multi_class="ovr")
+        clf = LinearSVC(random_state=seed)
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
         clf = SGDClassifier(loss="log", penalty="elasticnet", random_state=seed)
     else:
-        clf = LogisticRegression(random_state=seed, solver='lbfgs', multi_class="ovr")
+        clf = LogisticRegression(random_state=seed, solver='lbfgs')
     clf.fit(x_train, y_train)
     # y_pred_prob = model.predict_proba(x_test)
 
