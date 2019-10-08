@@ -3,7 +3,7 @@ from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import RandomForestClassifier
 
 from bionev.utils import *
@@ -98,26 +98,25 @@ def do_node_classification(
     # y_train = binarizer.transform(y_train).todense()
     # y_test = binarizer.transform(y_test).todense()
     if classifier_type == 'SVM':
-        clf = SVC(gamma='auto', probability=True, random_state=seed)
+        clf = LinearSVC(random_state=seed, multi_class="ovr")
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=seed)
     elif classifier_type == 'EN':
         clf = SGDClassifier(loss="log", penalty="elasticnet", random_state=seed)
     else:
-        clf = LogisticRegression(random_state=seed, solver='lbfgs')
-    model = OneVsRestClassifier(clf)
-    model.fit(x_train, y_train)
+        clf = LogisticRegression(random_state=seed, solver='lbfgs', multi_class="ovr")
+    clf.fit(x_train, y_train)
     # y_pred_prob = model.predict_proba(x_test)
 
     ## small trick : we assume that we know how many label to predict
     # y_pred = get_y_pred(y_test, y_pred_prob)
-    y_pred = model.predict(x_test)
+    y_pred = clf.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
     micro_f1 = f1_score(y_test, y_pred, average="micro")
     macro_f1 = f1_score(y_test, y_pred, average="macro")
     if save_model is not None:
-        joblib.dump(model, save_model)
+        joblib.dump(clf, save_model)
 
     print('#' * 9 + ' Node Classification Performance ' + '#' * 9)
     print(f'Accuracy: {accuracy:.3f}, Micro-F1: {micro_f1:.3f}, Macro-F1: {macro_f1:.3f}, MCC: {mcc:.3f}')
