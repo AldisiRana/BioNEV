@@ -87,9 +87,7 @@ def do_node_classification(
         classifier_type=None,
 ):
 
-    training_set = {key: embeddings[key] for key in node_list}
-
-    x_train, y_train, x_test, y_test = split_train_test_classify(training_set, node_list, labels,
+    x_train, y_train, x_test, y_test = split_train_test_classify(embeddings, node_list, labels,
                                                                  testing_ratio=testing_ratio)
 
     # binarizer = MultiLabelBinarizer(sparse_output=True)
