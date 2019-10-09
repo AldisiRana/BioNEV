@@ -6,12 +6,13 @@ import json
 import os
 import random
 import time
-
+import numpy as np
 import click
 import networkx as nx
+
 from bionev.embed_train import embedding_training
-from bionev.pipeline import do_link_prediction, do_node_classification, create_prediction_model
-from bionev.utils import split_train_test_graph, train_test_graph, read_node_labels
+from bionev.pipeline import create_prediction_model, do_link_prediction, do_node_classification
+from bionev.utils import read_node_labels, split_train_test_graph, train_test_graph
 
 
 @click.command()
@@ -26,9 +27,9 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.option('--number-walks', default=32, type=int, help='Number of random walks to start at each node. '
                                                            'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--walk-length', default=64, type=int, help='Length of the random walk started at each node. '
-                                                    'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+                                                          'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--workers', default=8, type=int, help='Number of parallel processes. '
-                                                'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
+                                                     'Only for random walk-based methods: DeepWalk, node2vec, struc2vec')
 @click.option('--dimensions', default=100, type=int, help='the dimensions of embedding for each node.')
 @click.option('--window-size', default=10, type=int,
               help='Window size of word2vec model. '
@@ -37,16 +38,16 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.option('--p', default=1.0, type=float, help='p is a hyper-parameter for node2vec, '
                                                    'and it controls how fast the walk explores.')
 @click.option('--q', default=1.0, type=float, help='q is a hyper-parameter for node2vec, '
-                                        'and it controls how fast the walk leaves the neighborhood of starting node.')
+                                                   'and it controls how fast the walk leaves the neighborhood of starting node.')
 @click.option('--method', required=True, type=click.Choice(['Laplacian', 'GF', 'SVD', 'HOPE', 'GraRep', 'DeepWalk',
-            'node2vec', 'struc2vec', 'LINE', 'SDNE', 'GAE']),
-            help='The embedding learning method')
+                                                            'node2vec', 'struc2vec', 'LINE', 'SDNE', 'GAE']),
+              help='The embedding learning method')
 @click.option('--label-file', default='', help='The label file for node classification')
 @click.option('--negative-ratio', default=5, type=int, help='the negative ratio of LINE')
 @click.option('--weighted', type=bool, default=False, help='Treat graph as weighted')
 @click.option('--directed', type=bool, default=False, help='Treat graph as directed')
 @click.option('--order', default=2, type=int,
-    help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
+              help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
 @click.option('--weight-decay', type=float, default=5e-4,
               help='coefficient for L2 regularization for Graph Factorization.')
 @click.option('--kstep', default=4, type=int, help='Use k-step transition probability matrix for GraRep.')
@@ -74,60 +75,66 @@ from bionev.utils import split_train_test_graph, train_test_graph, read_node_lab
 @click.option('--testing-edgelist', default=None, help='input testing edgelist')
 @click.option('--model-path', default=None, help='save classifier model. Input filepath and name')
 def main(
-        input,
-        output,
-        task,
-        testingratio,
-        number_walks,
-        walk_length,
-        workers,
-        dimensions,
-        window_size,
-        epochs,
-        p,
-        q,
-        method,
-        label_file,
-        negative_ratio,
-        weighted,
-        directed,
-        order,
-        weight_decay,
-        kstep,
-        lr,
-        alpha,
-        beta,
-        nu1,
-        nu2,
-        bs,
-        encoder_list,
-        opt1,
-        opt2,
-        opt3,
-        until_layer,
-        dropout,
-        hidden,
-        gae_model_selection,
-        eval_result_file,
-        seed,
-        training_edgelist,
-        testing_edgelist,
-        model_path,
+    input,
+    output,
+    task,
+    testingratio,
+    number_walks,
+    walk_length,
+    workers,
+    dimensions,
+    window_size,
+    epochs,
+    p,
+    q,
+    method,
+    label_file,
+    negative_ratio,
+    weighted,
+    directed,
+    order,
+    weight_decay,
+    kstep,
+    lr,
+    alpha,
+    beta,
+    nu1,
+    nu2,
+    bs,
+    encoder_list,
+    opt1,
+    opt2,
+    opt3,
+    until_layer,
+    dropout,
+    hidden,
+    gae_model_selection,
+    eval_result_file,
+    seed,
+    training_edgelist,
+    testing_edgelist,
+    model_path,
 ):
+    np.random.seed(seed)
+    random.seed(seed)
+
     print('#' * 70)
     print('Embedding Method: %s, Evaluation Task: %s' % (method, task))
     print('#' * 70)
     if task == 'link-prediction':
         if None not in (training_edgelist, testing_edgelist):
-            G, G_train, testing_pos_edges, train_graph_filename = train_test_graph(input,
-                                                                                   training_edgelist,
-                                                                                   testing_edgelist,
-                                                                                   weighted=weighted)
+            g, g_train, testing_pos_edges, train_graph_filename = train_test_graph(
+                input,
+                training_edgelist,
+                testing_edgelist,
+                weighted=weighted,
+            )
         else:
-            G, G_train, testing_pos_edges, train_graph_filename = split_train_test_graph(input,
-                                                                                         weighted=weighted,
-                                                                                         seed=seed,
-                                                                                         testing_ratio=testingratio)
+            g, g_train, testing_pos_edges, train_graph_filename = split_train_test_graph(
+                input_edgelist=input,
+                weighted=weighted,
+                testing_ratio=testingratio,
+            )
         time1 = time.time()
         model = embedding_training(
             method=method,
@@ -141,7 +148,6 @@ def main(
             walk_length=walk_length,
             dimensions=dimensions,
             window_size=window_size,
-            seed=seed,
             learning_rate=lr,
             epochs=epochs,
             hidden=hidden,
@@ -158,7 +164,8 @@ def main(
             beta=beta,
             nu1=nu1,
             nu2=nu2,
-            batch_size=bs)
+            batch_size=bs,
+        )
         embed_train_time = time.time() - time1
         print('Embedding Learning Time: %.2f s' % embed_train_time)
         if output is not None:
@@ -171,10 +178,9 @@ def main(
             embeddings = model.get_embeddings()
         result = do_link_prediction(
             embeddings=embeddings,
-            original_graph=G,
-            train_graph=G_train,
+            original_graph=g,
+            train_graph=g_train,
             test_pos_edges=testing_pos_edges,
-            seed=seed,
             save_model=model_path
         )
         eval_time = time.time() - time1
@@ -200,7 +206,6 @@ def main(
             walk_length=walk_length,
             dimensions=dimensions,
             window_size=window_size,
-            seed=seed,
             learning_rate=lr,
             epochs=epochs,
             hidden=hidden,
@@ -233,7 +238,6 @@ def main(
             node_list=node_list,
             labels=labels,
             testing_ratio=testingratio,
-            seed=seed,
             save_model=model_path
         )
         eval_time = time.time() - time1
@@ -253,7 +257,6 @@ def main(
             walk_length=walk_length,
             dimensions=dimensions,
             window_size=window_size,
-            seed=seed,
             learning_rate=lr,
             epochs=epochs,
             hidden=hidden,
@@ -282,7 +285,6 @@ def main(
         create_prediction_model(
             embeddings=embeddings,
             original_graph=original_graph,
-            seed=seed,
             save_model=model_path
         )
         embed_train_time = time.time() - time1
@@ -296,7 +298,6 @@ def main(
             dimension=dimensions,
             user=getpass.getuser(),
             date=datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S'),
-            seed=seed,
         )
 
         if task == 'link-prediction':

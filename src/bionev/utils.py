@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import bionev.OpenNE.graph as og
-import bionev.struc2vec.graph as sg
 import copy
 import itertools
+import random
+
 import networkx as nx
 import numpy as np
-import random
+
+import bionev.OpenNE.graph as og
+import bionev.struc2vec.graph as sg
 
 
 def read_for_OpenNE(filename, weighted=False):
@@ -64,7 +66,7 @@ def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weight
     return graph, g_train, testing_pos_edges, training_edgelist
 
 
-def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=False):
+def split_train_test_graph(*, input_edgelist, testing_ratio=0.2, weighted=False):
     if weighted:
         graph = nx.read_weighted_edgelist(input_edgelist)
     else:
@@ -72,8 +74,6 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
     node_num1, edge_num1 = len(graph.nodes), len(graph.edges)
     print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
     testing_edges_num = int(len(graph.edges) * testing_ratio)
-    if seed is not None:
-        random.seed(seed)
     testing_pos_edges = random.sample(graph.edges, testing_edges_num)
     g_train = copy.deepcopy(graph)
     for edge in testing_pos_edges:
@@ -93,11 +93,8 @@ def split_train_test_graph(input_edgelist, seed, testing_ratio=0.2, weighted=Fal
     return graph, g_train, testing_pos_edges, train_graph_filename
 
 
-def generate_neg_edges(graph: nx.Graph, m: int, seed=None):
+def generate_neg_edges(graph: nx.Graph, m: int):
     """Get m samples from the edges in the graph that don't exist."""
-    if seed is not None:
-        random.seed(seed)
-
     negative_edges = [
         (source, target)
         for source, target in itertools.combinations(graph, 2)
@@ -148,11 +145,9 @@ def read_node_labels(filename):
     return node_list, labels
 
 
-def split_train_test_classify(embedding_look_up, x, y, testing_ratio=0.2, seed=0):
-    state = np.random.get_state()
+def split_train_test_classify(embedding_look_up, x, y, testing_ratio: float = 0.2):
     training_ratio = 1 - testing_ratio
     training_size = int(training_ratio * len(x))
-    np.random.seed(seed)
     shuffle_indices = np.random.permutation(np.arange(len(x)))
     x_train = [embedding_look_up[x[shuffle_indices[i]]] for i in range(training_size)]
     y_train = [y[shuffle_indices[i]] for i in range(training_size)]
@@ -164,7 +159,6 @@ def split_train_test_classify(embedding_look_up, x, y, testing_ratio=0.2, seed=0
     x_test = np.array(x_test).ravel()
     y_test = np.array(y_test).ravel()
 
-    np.random.set_state(state)
     return x_train, y_train, x_test, y_test
 
 

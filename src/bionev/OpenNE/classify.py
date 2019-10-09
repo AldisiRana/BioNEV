@@ -46,25 +46,20 @@ class Classifier(object):
         return results
         # print('-------------------')
 
-    def predict(self, X, top_k_list):
-        X_ = numpy.asarray([self.embeddings[x] for x in X])
-        Y = self.clf.predict(X_, top_k_list=top_k_list)
-        return Y
+    def predict(self, x, top_k_list):
+        X_ = numpy.asarray([self.embeddings[x] for x in x])
+        return self.clf.predict(X_, top_k_list=top_k_list)
 
-    def split_train_evaluate(self, X, Y, train_precent, seed=0):
-        state = numpy.random.get_state()
+    def split_train_evaluate(self, x, y, train_precent):
+        training_size = int(train_precent * len(x))
+        shuffle_indices = numpy.random.permutation(numpy.arange(len(x)))
+        x_train = [x[shuffle_indices[i]] for i in range(training_size)]
+        y_train = [y[shuffle_indices[i]] for i in range(training_size)]
+        x_test = [x[shuffle_indices[i]] for i in range(training_size, len(x))]
+        y_test = [y[shuffle_indices[i]] for i in range(training_size, len(x))]
 
-        training_size = int(train_precent * len(X))
-        numpy.random.seed(seed)
-        shuffle_indices = numpy.random.permutation(numpy.arange(len(X)))
-        X_train = [X[shuffle_indices[i]] for i in range(training_size)]
-        Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
-        X_test = [X[shuffle_indices[i]] for i in range(training_size, len(X))]
-        Y_test = [Y[shuffle_indices[i]] for i in range(training_size, len(X))]
-
-        self.train(X_train, Y_train, Y)
-        numpy.random.set_state(state)
-        return self.evaluate(X_test, Y_test)
+        self.train(x_train, y_train, y)
+        return self.evaluate(x_test, y_test)
 
 
 def load_embeddings(filename):
@@ -85,14 +80,14 @@ def load_embeddings(filename):
 
 def read_node_label(filename):
     fin = open(filename, 'r')
-    X = []
-    Y = []
+    x = []
+    y = []
     while 1:
         l = fin.readline()
         if l == '':
             break
         vec = l.strip().split(' ')
-        X.append(vec[0])
-        Y.append(vec[1:])
+        x.append(vec[0])
+        y.append(vec[1:])
     fin.close()
-    return X, Y
+    return x, y
