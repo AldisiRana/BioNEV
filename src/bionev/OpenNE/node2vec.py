@@ -23,14 +23,16 @@ class Node2vec(object):
         self.vectors = {}
         if dw:
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
+            sentences = self.walker.simulate_walks(
+                num_walks=self.num_paths, walk_length=self.path_length)
         else:
             self.walker = walker.Walker(
                 graph, p=p, q=q, update=False, workers=kwargs["workers"])
             print("Preprocess transition probs...")
             self.walker.preprocess_transition_probs()
+            sentences = self.walker.simulate_walks(
+                num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
 
-        sentences = self.walker.simulate_walks(
-            num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
         kwargs["sentences"] = sentences
         kwargs["min_count"] = kwargs.get("min_count", 0)
         kwargs["size"] = kwargs.get("size", dim)
