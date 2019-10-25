@@ -136,8 +136,11 @@ class Walker:
             unnormalized_probs = [self.G[node][nbr]['weight']
                                   for nbr in self.G.neighbors(node)]
             norm_const = sum(unnormalized_probs)
-            normalized_probs = [
-                float(u_prob) / norm_const for u_prob in unnormalized_probs]
+            if norm_const == 0.0 :
+                normalized_probs = unnormalized_probs
+            else:
+                normalized_probs = [
+                    float(u_prob) / norm_const for u_prob in unnormalized_probs]
             self.alias_nodes[node] = alias_setup(normalized_probs)
 
         triads = {}
