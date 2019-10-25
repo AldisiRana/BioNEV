@@ -83,7 +83,7 @@ def split_train_test_graph(*, input_edgelist, testing_ratio=0.2, weighted=False)
 
     train_graph_filename = 'graph_train.edgelist'
     if weighted:
-        nx.write_edgelist(g_train, train_graph_filename, data=['weight'])
+        nx.write_weighted_edgelist(g_train, train_graph_filename)
     else:
         nx.write_edgelist(g_train, train_graph_filename, data=False)
 
