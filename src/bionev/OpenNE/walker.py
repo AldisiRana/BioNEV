@@ -121,8 +121,11 @@ class Walker:
             else:
                 unnormalized_probs.append(self.G[dst][dst_nbr]['weight'] / self.q)
         norm_const = sum(unnormalized_probs)
-        normalized_probs = [
-            float(u_prob) / norm_const for u_prob in unnormalized_probs]
+        if norm_const > 0.0:
+            normalized_probs = [
+                float(u_prob) / norm_const for u_prob in unnormalized_probs]
+        else:
+            normalized_probs = unnormalized_probs
 
         return alias_setup(normalized_probs)
 
