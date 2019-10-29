@@ -55,11 +55,10 @@ def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weight
     if weighted:
         graph = nx.read_weighted_edgelist(input_edgelist)
         g_train = nx.read_weighted_edgelist(training_edgelist)
-        g_test = nx.read_weighted_edgelist(testing_edgelist)
     else:
         graph = nx.read_edgelist(input_edgelist)
         g_train = nx.read_edgelist(training_edgelist)
-        g_test = nx.read_edgelist(testing_edgelist)
+    g_test = nx.read_edgelist(testing_edgelist)
     testing_pos_edges = g_test.edges
     node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
