@@ -25,7 +25,7 @@ class Node2vec(object):
             self.walker = walker.Walker(
                 graph, p=p, q=q, update=False, workers=kwargs["workers"])
             sentences = self.walker.simulate_walks(
-                num_walks=self.num_paths, walk_length=self.path_length)
+                num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
         else:
             self.walker = walker.Walker(
                 graph, p=p, q=q, update=False, workers=kwargs["workers"])
