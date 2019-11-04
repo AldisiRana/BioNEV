@@ -24,8 +24,10 @@ class Node2vec(object):
         if dw:
             self.walker = walker.Walker(
                 graph, p=p, q=q, update=False, workers=kwargs["workers"])
+            print("Preprocess transition probs...")
+            self.walker.preprocess_transition_probs()
             sentences = self.walker.simulate_walks(
-                num_walks=self.num_paths, walk_length=self.path_length, vectors=None)
+                num_walks=self.num_paths, walk_length=self.path_length, vectors=self.vectors)
         else:
             self.walker = walker.Walker(
                 graph, p=p, q=q, update=False, workers=kwargs["workers"])
