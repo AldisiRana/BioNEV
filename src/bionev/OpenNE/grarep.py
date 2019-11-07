@@ -71,7 +71,7 @@ class GraRep(object):
         self.node_size = self.adj.shape[0]
         self.Ak = np.matrix(np.identity(self.node_size))
         self.RepMat = np.zeros((self.node_size, int(self.dim * self.Kstep)))
-        for i in range(self.Kstep):
+        for i in range(1, self.Kstep):
             print('Kstep =', i)
             self.Ak = np.dot(self.Ak, self.adj)
             # print('finish np.dot(self.Ak, self.adj)')
