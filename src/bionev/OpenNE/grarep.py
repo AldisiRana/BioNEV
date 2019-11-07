@@ -21,8 +21,12 @@ class GraRep(object):
         look_up = self.g.look_up_dict
         adj = np.zeros((node_size, node_size))
         for edge in graph.edges():
-            adj[look_up[edge[0]]][look_up[edge[1]]] = graph[edge[0]][edge[1]]['weight']
-            adj[look_up[edge[1]]][look_up[edge[0]]] = graph[edge[0]][edge[1]]['weight']
+            if graph[edge[0]][edge[1]]['weight'] > 0.0:
+                adj[look_up[edge[0]]][look_up[edge[1]]] = graph[edge[0]][edge[1]]['weight']
+                adj[look_up[edge[1]]][look_up[edge[0]]] = graph[edge[0]][edge[1]]['weight']
+            else:
+                adj[look_up[edge[0]]][look_up[edge[1]]] = 0.001
+                adj[look_up[edge[1]]][look_up[edge[0]]] = 0.001
         # ScaleSimMat
         # print('finish getAdjMat')
         return np.matrix(adj)
