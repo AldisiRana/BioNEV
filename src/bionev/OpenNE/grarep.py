@@ -20,9 +20,9 @@ class GraRep(object):
         node_size = self.g.node_size
         look_up = self.g.look_up_dict
         adj = np.zeros((node_size, node_size))
-        for edge in self.g.G.edges():
-            adj[look_up[edge[0]]][look_up[edge[1]]] = 1.0
-            adj[look_up[edge[1]]][look_up[edge[0]]] = 1.0
+        for edge in graph.edges():
+            adj[look_up[edge[0]]][look_up[edge[1]]] = graph[edge[0]][edge[1]]['weight']
+            adj[look_up[edge[1]]][look_up[edge[0]]] = graph[edge[0]][edge[1]]['weight']
         # ScaleSimMat
         # print('finish getAdjMat')
         return np.matrix(adj)
