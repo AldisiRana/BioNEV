@@ -51,30 +51,29 @@ def read_for_SVD(filename, weighted=False):
     return graph
 
 
-def train_test_graph(input_edgelist, training_edgelist, testing_edgelist, weighted=False):
+def read_graph(edgelist, weighted=False):
     if weighted:
-        graph = nx.read_weighted_edgelist(input_edgelist)
-        g_train = nx.read_weighted_edgelist(training_edgelist)
+        graph = nx.read_weighted_edgelist(edgelist)
     else:
-        graph = nx.read_edgelist(input_edgelist)
-        g_train = nx.read_edgelist(training_edgelist)
+        graph = nx.read_edgelist(edgelist)
+    return graph
+
+
+def train_test_graph(training_edgelist, testing_edgelist, weighted=False):
+    g_train = read_graph(training_edgelist, weighted=weighted)
     g_test = nx.read_edgelist(testing_edgelist)
     testing_pos_edges = g_test.edges
     node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
-    return graph, g_train, testing_pos_edges, training_edgelist
+    return g_train, testing_pos_edges, training_edgelist
 
 
-def split_train_test_graph(*, input_edgelist, testing_ratio=0.2, weighted=False):
-    if weighted:
-        graph = nx.read_weighted_edgelist(input_edgelist)
-    else:
-        graph = nx.read_edgelist(input_edgelist)
-    node_num1, edge_num1 = len(graph.nodes), len(graph.edges)
+def split_train_test_graph(*, input_graph, testing_ratio=0.2, weighted=False):
+    node_num1, edge_num1 = len(input_graph.nodes), len(input_graph.edges)
     print('Original Graph: nodes:', node_num1, 'edges:', edge_num1)
-    testing_edges_num = int(len(graph.edges) * testing_ratio)
-    testing_pos_edges = random.sample(graph.edges, testing_edges_num)
-    g_train = copy.deepcopy(graph)
+    testing_edges_num = int(len(input_graph.edges) * testing_ratio)
+    testing_pos_edges = random.sample(input_graph.edges, testing_edges_num)
+    g_train = copy.deepcopy(input_graph)
     for edge in testing_pos_edges:
         node_u, node_v = edge
         if g_train.degree(node_u) > 1 and g_train.degree(node_v) > 1:
@@ -89,7 +88,7 @@ def split_train_test_graph(*, input_edgelist, testing_ratio=0.2, weighted=False)
     node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
 
-    return graph, g_train, testing_pos_edges, train_graph_filename
+    return input_graph, g_train, testing_pos_edges, train_graph_filename
 
 
 def generate_neg_edges(graph: nx.Graph, m: int):

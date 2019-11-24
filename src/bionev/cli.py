@@ -12,7 +12,7 @@ import networkx as nx
 
 from bionev.embed_train import embedding_training
 from bionev.pipeline import create_prediction_model, do_link_prediction, do_node_classification
-from bionev.utils import read_node_labels, split_train_test_graph, train_test_graph
+from bionev.utils import read_node_labels, split_train_test_graph, train_test_graph, read_graph
 
 
 @click.command()
@@ -122,16 +122,16 @@ def main(
     print('Embedding Method: %s, Evaluation Task: %s' % (method, task))
     print('#' * 70)
     if task == 'link-prediction':
+        input_graph = read_graph(input, weighted=weighted)
         if None not in (training_edgelist, testing_edgelist):
-            g, g_train, testing_pos_edges, train_graph_filename = train_test_graph(
-                input,
+            g_train, testing_pos_edges, train_graph_filename = train_test_graph(
                 training_edgelist,
                 testing_edgelist,
                 weighted=weighted,
             )
         else:
-            g, g_train, testing_pos_edges, train_graph_filename = split_train_test_graph(
-                input_edgelist=input,
+            g_train, testing_pos_edges, train_graph_filename = split_train_test_graph(
+                input_graph=input_graph,
                 weighted=weighted,
                 testing_ratio=testingratio,
             )
@@ -178,7 +178,7 @@ def main(
             embeddings = model.get_embeddings()
         result = do_link_prediction(
             embeddings=embeddings,
-            original_graph=g,
+            original_graph=input_graph,
             train_graph=g_train,
             test_pos_edges=testing_pos_edges,
             save_model=model_path
