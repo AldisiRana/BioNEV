@@ -61,7 +61,7 @@ def read_graph(edgelist, weighted=False):
 
 def train_test_graph(training_edgelist, testing_edgelist, weighted=False):
     g_train = read_graph(training_edgelist, weighted=weighted)
-    g_test = nx.read_edgelist(testing_edgelist)
+    g_test = read_graph(testing_edgelist, weighted=weighted)
     testing_pos_edges = g_test.edges
     node_num1, edge_num1 = len(g_train.nodes), len(g_train.edges)
     print('Training Graph: nodes:', node_num1, 'edges:', edge_num1)
