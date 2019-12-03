@@ -2,7 +2,7 @@ from typing import Optional
 
 import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.linear_model import LogisticRegression, ElasticNetCV
 from sklearn.metrics import accuracy_score, average_precision_score, f1_score, matthews_corrcoef, roc_auc_score
 from sklearn.svm import LinearSVC, SVC
 
@@ -30,7 +30,7 @@ def do_link_prediction(
     elif classifier_type == 'RF':
         clf = RandomForestClassifier(n_estimators=100, max_depth=2)
     elif classifier_type == 'EN':
-        clf = SGDClassifier(loss="log", penalty="elasticnet")
+        clf = ElasticNetCV()
     elif classifier_type is None or classifier_type == 'LR':
         clf = LogisticRegression(solver='lbfgs')
     else:
